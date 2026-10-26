@@ -1,0 +1,3590 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>NAS 도입 검토</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: scroll-pinned scenes on a cool studio ground; devices drawn to real front-panel scale (mm) */
+:root {
+  --bg: #EDF0F3;
+  --fg: #101318;
+  --fg-muted: #5B6470;
+  --line: #D3D9E0;
+  --card: #F8FAFC;
+  --accent: #2F5BEA;
+  --shadow: rgba(16, 19, 24, .30);
+  --ok: #15924F;
+  --warn: #B7791F;
+  --bad: #D2343C;
+
+  --chassis-1: #2B2F35;
+  --chassis-2: #15171A;
+  --chassis-edge: #0B0C0E;
+  --face: #1C1F23;
+  --tray: #24282D;
+  --vent: #0E1012;
+  --latch: #31363D;
+  --led-off: #4A515B;
+  --led-on: #3FD08A;
+  --plate: #2F5BEA;
+  --plate-fg: #FFFFFF;
+  --data: #2F5BEA;
+  --data-copy: #7C97F0;
+  --parity: #B9C2CE;
+  --parity-fg: #27303B;
+  --board: #1E2925;
+  --board-line: #2C3A35;
+  --slot: #0E1412;
+  --module: #2A6B4E;
+  --chip: #111613;
+
+  --night: #05070A;      /* power-outage scene: same in both themes */
+  --night-fg: #E8ECF2;
+  --flash: rgba(255, 244, 214, .9);
+  --spark: #FFD54A;
+  --smoke: rgba(120, 128, 138, .55);
+  --crack: #C9D1DC;
+  --scrim: rgba(10, 12, 15, .55);
+  --lamp: #FFE2A8;
+  --lamp-glow: rgba(255, 213, 138, .42);
+  --lamp-shade: #3A4048;
+  --lamp-cord: #4A515B;
+
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  --u: clamp(0.8px, 0.18vw, 1.7px); /* 1mm of device front panel */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A0C0F; --fg: #EEF1F5; --fg-muted: #8A94A3; --line: #222831; --card: #12161B; --accent: #8AA8FF;
+    --shadow: rgba(0, 0, 0, .75); --ok: #3FD08A; --warn: #F2B44C; --bad: #FF6B6B;
+    --chassis-1: #343941; --chassis-2: #1A1D22; --chassis-edge: #454C57; --face: #202429;
+    --tray: #2A2F35; --vent: #121417; --latch: #3A4048; --led-off: #545C68; --led-on: #4BE39A;
+    --plate: #8AA8FF; --plate-fg: #0A0C0F; --data: #8AA8FF; --data-copy: #4D64A8; --parity: #39414C; --parity-fg: #C9D1DC;
+    --board: #16201C; --board-line: #25332D; --slot: #0A0F0D; --module: #2F7A58; --chip: #0C110F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A0C0F; --fg: #EEF1F5; --fg-muted: #8A94A3; --line: #222831; --card: #12161B; --accent: #8AA8FF;
+  --shadow: rgba(0, 0, 0, .75); --ok: #3FD08A; --warn: #F2B44C; --bad: #FF6B6B;
+  --chassis-1: #343941; --chassis-2: #1A1D22; --chassis-edge: #454C57; --face: #202429;
+  --tray: #2A2F35; --vent: #121417; --latch: #3A4048; --led-off: #545C68; --led-on: #4BE39A;
+  --plate: #8AA8FF; --plate-fg: #0A0C0F; --data: #8AA8FF; --data-copy: #4D64A8; --parity: #39414C; --parity-fg: #C9D1DC;
+  --board: #16201C; --board-line: #25332D; --slot: #0A0F0D; --module: #2F7A58; --chip: #0C110F;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .14em;
+  color: var(--accent);
+}
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- Device drawing ---------- */
+.device { position: relative; display: block; will-change: transform; }
+.device::after { /* floor shadow */
+  content: "";
+  position: absolute;
+  left: 6%; right: 6%;
+  bottom: calc(var(--u) * -9);
+  height: calc(var(--u) * 16);
+  background: radial-gradient(closest-side, var(--shadow), transparent);
+  z-index: -1;
+}
+.device svg { display: block; height: calc(var(--u) * 166); width: auto; max-width: none; }
+.led-disk { fill: var(--led-on); }
+.led-disk.off { fill: var(--led-off); }
+.bay-hl { opacity: 0; fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.plate {
+  opacity: 0;
+  transform: translateY(14px);
+  transform-box: fill-box;
+  transition: opacity .35s ease, transform .5s cubic-bezier(.2, .8, .2, 1);
+}
+.bay.filled .plate { opacity: 1; transform: none; }
+.plate rect { fill: var(--plate); }
+.plate text {
+  fill: var(--plate-fg);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 500;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* ---------- Scene 1: intro ---------- */
+#intro .stage {
+  position: relative;
+  display: grid;
+  gap: 48px;
+  justify-items: center;
+  padding-block: 72px;
+}
+.hero { display: grid; justify-items: center; gap: 4px; text-align: center; }
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .14em;
+  color: var(--fg-muted);
+}
+.hero-word {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: clamp(112px, 27vw, 330px);
+  line-height: .86;
+  letter-spacing: -.02em;
+  margin: 0;
+}
+.hero-sub {
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 1.4vw, 15px);
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  padding-left: .32em; /* balance trailing tracking */
+}
+.hint {
+  display: none;
+  pointer-events: none; /* stays in place (invisible) after the intro and must not swallow clicks */
+  font-size: 13px;
+  color: var(--fg-muted);
+  gap: 10px;
+  align-items: center;
+  flex-direction: column;
+}
+.hint::after {
+  content: "";
+  width: 1px;
+  height: 36px;
+  background: linear-gradient(var(--fg-muted), transparent);
+  animation: drip 1.8s ease-in-out infinite;
+  transform-origin: top;
+}
+@keyframes drip { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+
+.intro-head { text-align: center; display: grid; gap: 6px; }
+.intro-head h2 {
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 40px);
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+.intro-head .family {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+.pair {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(28px, 9vw, 140px);
+  max-width: 100%;
+}
+.unit { position: relative; display: grid; justify-items: center; gap: 22px; }
+.unit.big { z-index: 2; }
+.unit-label { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.unit-label .model {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: clamp(20px, 2.4vw, 30px);
+  letter-spacing: -.01em;
+}
+.unit-label .meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.unit-label .price {
+  font-size: clamp(15px, 1.6vw, 18px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 6px;
+}
+
+/* At a glance: the three recommended builds, shown right after the hero word leaves */
+.glance { display: grid; gap: clamp(16px, 3vh, 32px); justify-items: center; width: min(960px, 100%); }
+.glance-note { margin: 0; font-size: 14px; color: var(--fg-muted); }
+.glance-large { display: grid; gap: 6px; width: 100%; font-size: 12.5px; color: var(--fg-muted); }
+.gl-head { font-size: 12.5px; font-weight: 600; }
+.gl-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 14px; border-top: 1px solid var(--line); padding-top: 8px; }
+.gl-item { display: grid; gap: 0; align-content: start; line-height: 1.45; }
+.gl-item + .gl-item { border-left: 1px solid var(--line); padding-left: 14px; }
+.gl-item .t { display: flex; justify-content: space-between; gap: 8px; }
+.gl-item .t b { color: var(--fg); font-weight: 600; }
+.gl-item .t span { color: var(--fg); font-variant-numeric: tabular-nums; }
+.gl-warn { margin: 2px 0 0; line-height: 1.5; }
+.glance-more { background: var(--card); font-weight: 600; padding: 10px 22px; }
+.glance-more:hover { border-color: var(--accent); color: var(--accent); }
+.anim .layer { pointer-events: none; } /* stacked layers must not block the glance button */
+.anim #intro .layer-glance { align-items: start; } /* script centres it with a top margin, also when taller than the screen */
+.anim .glance-more { pointer-events: auto; }
+.glance-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; width: 100%; }
+.glance-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 20px 18px;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+.glance-card .cap {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -.01em;
+}
+.glance-card .cap small { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--fg-muted); margin-left: 6px; letter-spacing: 0; }
+.glance-card .model {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--accent);
+  margin-top: 8px;
+}
+.glance-card .spec { font-size: 14px; color: var(--fg-muted); }
+.glance-card .total {
+  font-size: clamp(17px, 1.8vw, 20px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+/* ---------- Generic pinned scenes (2-5) ---------- */
+.scene .stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 2.4vh, 36px);
+  padding-block: 72px;
+}
+.scene-head { text-align: center; display: grid; gap: 6px; max-width: 640px; }
+.scene-head h2 {
+  margin: 0;
+  font-size: clamp(22px, min(3vw, 4.2vh), 36px);
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+.scene-head p { margin: 0; color: var(--fg-muted); font-size: clamp(14px, 1.4vw, 16px); }
+.dots { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.dots > span, .dots > button {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--fg-muted);
+  transition: background .3s, color .3s, border-color .3s;
+}
+.dots > button { background: transparent; line-height: inherit; cursor: pointer; }
+.dots > button:not(.on):hover { border-color: var(--fg-muted); color: var(--fg); }
+.dots > .on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.caps { display: grid; max-width: 620px; text-align: center; gap: 12px; }
+.cap { margin: 0; color: var(--fg); font-size: clamp(14px, 1.5vw, 17px); }
+.cap b { font-weight: 600; }
+.foot {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--fg-muted);
+  text-align: center;
+  margin: 0;
+}
+
+/* Scene 2: spec comparison */
+#s2 { --u: clamp(0.55px, min(0.13vw, 0.17vh), 1.25px); }
+.compare {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "a mid b";
+  align-items: center;
+  gap: clamp(16px, 3vw, 48px);
+  width: min(1100px, 100%);
+}
+.compare .dev-a { grid-area: a; justify-self: center; }
+.compare .dev-b { grid-area: b; justify-self: center; }
+.compare .dev-a, .compare .dev-b { display: grid; justify-items: center; gap: 18px; }
+.viz-name {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: clamp(15px, 1.7vw, 22px);
+  letter-spacing: -.01em;
+}
+.compare .mid { grid-area: mid; min-width: 0; display: grid; justify-items: center; }
+.spec-list { display: grid; gap: 36px; }
+.spec-card { display: grid; justify-items: center; gap: 12px; text-align: center; max-width: 480px; width: 100%; }
+.spec-card.enter { animation: spec-in .5s cubic-bezier(.2, .8, .2, 1); }
+@keyframes spec-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.spec-idx { font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; color: var(--fg-muted); }
+.spec-title { margin: 0; font-size: clamp(26px, 3.4vw, 44px); font-weight: 600; line-height: 1.15; text-wrap: balance; }
+.spec-vals {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 14px;
+  width: 100%;
+}
+.spec-vals .a { text-align: right; }
+.spec-vals .b { text-align: left; }
+.spec-vals .a, .spec-vals .b { font-size: clamp(16px, 1.9vw, 24px); font-weight: 600; font-variant-numeric: tabular-nums; min-width: 0; }
+.spec-vals .sub { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 400; color: var(--fg-muted); }
+.spec-vals .vs { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); }
+.spec-vals .win { color: var(--accent); }
+.spec-vals.same .a, .spec-vals.same .b { color: var(--fg-muted); }
+.spec-desc { margin: 0; color: var(--fg-muted); font-size: clamp(14px, 1.4vw, 16px); max-width: 420px; }
+.spec-ticks { display: flex; gap: 6px; margin-top: 4px; }
+.spec-ticks i { width: 18px; height: 3px; border-radius: 2px; background: var(--line); }
+.spec-ticks i.on { background: var(--accent); }
+
+/* Expansion unit rising from behind the front view */
+.dx-layer {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: calc(var(--u) * 236);
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) translateY(0) scale(.62);
+  opacity: 0;
+  filter: brightness(.8);
+  transition: opacity .45s ease, transform .75s cubic-bezier(.2, .8, .2, 1);
+  pointer-events: none;
+}
+.dx-layer svg { display: block; width: 100%; height: auto; }
+.viz[data-view="exp"] .dx-layer { opacity: 1; transform: translateX(-50%) translateY(-65%) scale(.62); }
+
+/* Data flowing through the LAN ports */
+.flow { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 2.5 5.5; }
+.viz[data-view="lan"] .flow { animation: flow var(--dur, 1s) linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -16; } }
+
+/* Scene 2 device views: one picture per spec row */
+.viz { position: relative; width: calc(var(--u) * var(--w, 106)); height: calc(var(--u) * 166); }
+.viz .view {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(.96);
+  transition: opacity .45s ease, transform .55s cubic-bezier(.2, .8, .2, 1);
+  pointer-events: none;
+}
+.viz .view > svg { display: block; width: 100%; height: 100%; }
+.viz[data-view="front"] .view-front,
+.viz[data-view="bays"] .view-front,
+.viz[data-view="exp"] .view-front,
+.viz[data-view="cpu"] .view-cpu,
+.viz[data-view="lan"] .view-lan,
+.viz[data-view="mem"] .view-mem,
+.viz[data-view="m2"] .view-m2,
+.viz[data-view="usb"] .view-usb { opacity: 1; transform: none; }
+.view-usb .unplugged { fill: none; stroke: var(--fg-muted); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.view-usb .x-mark { fill: none; stroke: var(--bad); stroke-width: 2; stroke-linecap: round; }
+.view-usb .dev-ico { fill: var(--chassis-1); stroke: var(--chassis-edge); }
+.view-usb .dev-ico.off { opacity: .35; }
+.bay-hl { transition: opacity .3s; }
+.viz[data-view="bays"] .bay-hl { opacity: 1; }
+.viz[data-view="bays"] .plate { opacity: 1; transform: none; }
+
+/* Scene 3: capacity */
+#s3 { --u: clamp(0.55px, min(0.14vw, 0.15vh), 1.35px); }
+.big-cap {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: clamp(44px, min(9vw, 10vh), 120px);
+  line-height: .9;
+  letter-spacing: -.02em;
+  text-align: center;
+}
+.big-cap small {
+  display: block;
+  font-family: var(--font-mono);
+  font-stretch: 100%;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: .14em;
+  color: var(--fg-muted);
+  margin-top: 10px;
+}
+.cap-pair { display: flex; justify-content: center; align-items: flex-end; gap: clamp(28px, 8vw, 120px); max-width: 100%; }
+.cap-unit { display: grid; justify-items: center; gap: 20px; }
+.cap-dev { text-align: center; display: grid; gap: 2px; min-height: 64px; }
+.cap-dev .t { font-weight: 600; font-size: clamp(14px, 1.4vw, 16px); }
+.cap-dev .m { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); }
+.cap-dev .p { font-size: clamp(15px, 1.6vw, 18px); font-weight: 600; font-variant-numeric: tabular-nums; }
+.cap-dev.na .t, .cap-dev.na .p { color: var(--fg-muted); }
+.cap-unit .device { transition: opacity .4s ease, filter .4s ease; }
+.cap-unit.off .device { opacity: .3; filter: grayscale(1); }
+
+/* Scene 4: SHR */
+#s4 { --k: clamp(1.05px, min(0.2vw, 0.22vh), 2px); }
+.raid-pair { display: flex; justify-content: center; align-items: flex-start; gap: clamp(24px, 6vw, 96px); max-width: 100%; }
+.raid-panel { display: grid; justify-items: center; gap: 10px; }
+.raid-panel .name { font-family: var(--font-display); font-stretch: 112%; font-weight: 700; font-size: clamp(15px, 1.6vw, 19px); }
+.raid-panel .name small { font-family: var(--font-mono); font-stretch: 100%; font-weight: 400; font-size: 12px; color: var(--fg-muted); margin-left: 6px; }
+.raid-panel svg { display: block; height: auto; max-width: none; }
+.col-t { fill: var(--fg-muted); font-family: var(--font-mono); font-size: 6.5px; text-anchor: middle; }
+.col-bg { fill: none; stroke: var(--line); stroke-width: .8; transition: stroke .3s; }
+.blk { transition: opacity .35s; }
+.blk.d { fill: var(--data); }
+.blk.c { fill: var(--data-copy); }
+.blk.p { fill: var(--parity); }
+.blk-t { font-family: var(--font-mono); font-size: 7px; text-anchor: middle; dominant-baseline: central; transition: opacity .35s; }
+.blk-t.d, .blk-t.c { fill: var(--plate-fg); }
+.blk-t.p { fill: var(--parity-fg); }
+.col .x { opacity: 0; stroke: var(--bad); stroke-width: 1.6; stroke-linecap: round; transition: opacity .3s; }
+.col.failed .blk, .col.failed .blk-t { opacity: .14; }
+.col.failed .x { opacity: 1; }
+.col.failed .col-bg { stroke: var(--bad); }
+.status {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.status.ok { color: var(--ok); }
+.status.bad { color: var(--bad); }
+.status.info { color: var(--fg-muted); }
+.status.warn { color: var(--warn); }
+.col.new .col-bg { stroke: var(--accent); stroke-dasharray: 3 2; }
+.col.new .blk, .col.new .blk-t { opacity: 0; }
+.col.new .blk.rebuilt, .col.new .blk-t.rebuilt { opacity: 1; }
+.blk.src { stroke: var(--accent); stroke-width: 1.6; }
+.links path { fill: none; stroke: var(--accent); stroke-width: 1.1; stroke-dasharray: 2 2; animation: link-flow .5s linear infinite; }
+@keyframes link-flow { to { stroke-dashoffset: -8; } }
+.legend { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; font-size: 12.5px; color: var(--fg-muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+/* Scene 5: memory & M.2 */
+.board-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 56px);
+  align-items: center;
+  width: min(1080px, 100%);
+}
+.board-wrap svg { width: 100%; height: auto; display: block; }
+.brd-t { font-family: var(--font-mono); font-size: 8px; fill: #C9D6D0; }
+.brd-t.dim { fill: #8FA39A; }
+.hl-ring { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; transition: opacity .35s; }
+.board[data-focus="mem"] .hl-mem, .board[data-focus="m2"] .hl-m2, .board[data-focus="all"] .hl-ring { opacity: 1; }
+.ghost { fill: none; stroke: #8FA39A; stroke-width: 1; stroke-dasharray: 3 3; }
+.opt-cards { display: grid; gap: 14px; min-width: 0; }
+.opt-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: grid;
+  gap: 8px;
+  transition: opacity .35s, border-color .35s;
+}
+.opt-card h3 { margin: 0; font-size: 16px; font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.opt-card p { margin: 0; font-size: 14px; color: var(--fg-muted); }
+.opt-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 13.5px; }
+.opt-card li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dashed var(--line); padding-block: 3px; }
+.opt-card li span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.opt-card li.soldout { color: var(--fg-muted); text-decoration: line-through; }
+.chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+}
+.chip.ok { background: var(--ok); color: var(--bg); }
+.chip.warn { background: var(--warn); color: var(--bg); }
+.chip.bad { background: var(--bad); color: var(--bg); }
+.chip.muted { background: transparent; color: var(--fg-muted); border: 1px solid var(--line); }
+
+/* Power outage scene: a dark room, one pendant lamp, the NAS on the floor beneath it */
+#outage { --u: clamp(0.8px, min(0.2vw, 0.2vh), 1.6px); }
+html:not(.anim) #outage .stage { position: relative; } /* animated mode keeps the sticky stage */
+/* the blackout must reach the screen edges, so the side gutter moves from the section to the stage */
+#outage.wrap { padding-left: 0; padding-right: 0; }
+#outage .stage {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.blackout { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: var(--night); z-index: 0; }
+#outage .stage > .scene-head, #outage .stage > .room, #outage .stage > .caps { position: relative; z-index: 1; }
+#outage .stage .scene-head h2, #outage .stage .cap { transition: color .4s; }
+#outage .stage.dark .scene-head h2, #outage .stage.dark .cap { color: var(--night-fg); }
+
+/* --enter: 0 -> 1 while the room darkens and the NAS settles; --light: lamp brightness */
+.room { position: relative; width: min(560px, 100%); height: clamp(240px, 48vh, 470px); --enter: 0; --light: 1; }
+.lamp { position: absolute; left: 50%; top: 0; width: 0; height: 100%; opacity: var(--enter); }
+.lamp .cord { position: absolute; left: -1px; top: 0; width: 2px; height: 16%; background: var(--lamp-cord); }
+.lamp .shade {
+  position: absolute;
+  left: -34px; top: 16%;
+  width: 68px; height: 26px;
+  background: var(--lamp-shade);
+  clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
+}
+.lamp .bulb {
+  position: absolute;
+  left: -9px; top: calc(16% + 20px);
+  width: 18px; height: 12px;
+  border-radius: 0 0 9px 9px;
+  background: var(--lamp);
+  box-shadow: 0 0 22px 6px var(--lamp-glow);
+  opacity: var(--light);
+}
+.cone {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(16% + 26px); bottom: 8%;
+  background: linear-gradient(to bottom, var(--lamp-glow), transparent 95%);
+  clip-path: polygon(44% 0, 56% 0, 88% 100%, 12% 100%);
+  opacity: calc(var(--light) * var(--enter) * .9);
+  pointer-events: none;
+}
+.pool {
+  position: absolute;
+  left: 8%; right: 8%;
+  bottom: 2%; height: 18%;
+  background: radial-gradient(closest-side, var(--lamp-glow), transparent);
+  opacity: calc(var(--light) * var(--enter));
+  pointer-events: none;
+}
+.outage-dev {
+  position: absolute;
+  left: 50%; bottom: 9%;
+  /* --ups slides the pair left so NAS + UPS stay centred together */
+  transform: translateX(calc(-50% - var(--u) * 46 * var(--ups, 0))) scale(calc(1 - .4 * var(--enter)));
+  transform-origin: 50% 100%;
+  transition: transform .6s cubic-bezier(.2, .8, .2, 1);
+  /* the NAS is only as visible as the lamp above it */
+  filter: brightness(calc(1 - var(--enter) * (1 - var(--light)) * .7));
+}
+.outage-dev.ups-mode { --ups: 1; filter: none; }
+.ups, .ups-cable { position: absolute; opacity: 0; transition: opacity .5s, transform .6s cubic-bezier(.2, .8, .2, 1); pointer-events: none; }
+.ups { left: calc(100% + var(--u) * 22); bottom: 0; width: calc(var(--u) * 70); transform: translateY(16px); }
+.ups svg { display: block; width: 100%; height: auto; }
+.ups-cable { left: 100%; bottom: calc(var(--u) * 12); width: calc(var(--u) * 22); border-top: 2px dashed var(--accent); }
+.ups-mode .ups, .ups-mode .ups-cable { opacity: 1; transform: none; }
+.ups-bars rect { fill: var(--led-on); transition: fill .3s; }
+.ups-bars rect.empty { fill: var(--led-off); }
+.ups-led { fill: var(--led-on); }
+.on-battery .ups-led { fill: var(--warn); animation: ups-blink 1s steps(1, end) infinite; }
+@keyframes ups-blink { 50% { fill: var(--led-off); } }
+.outage-status {
+  position: absolute;
+  left: 50%; bottom: 0;
+  transform: translateX(-50%);
+  background: var(--night);
+  opacity: 0;
+  transition: opacity .4s;
+}
+.outage-status.show { opacity: 1; }
+.ups-hero { position: relative; }
+.ups-hero svg { display: block; width: clamp(90px, 13vw, 150px); height: auto; }
+.ups-hero::after { /* floor shadow */
+  content: "";
+  position: absolute;
+  left: 4%; right: 4%;
+  bottom: -10px;
+  height: 18px;
+  background: radial-gradient(closest-side, var(--shadow), transparent);
+  z-index: -1;
+}
+.led-stat { fill: var(--led-on); }
+.powered-off .led-disk, .powered-off .led-stat { fill: var(--led-off); }
+.zap-glow {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 190%; height: 230%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, var(--flash), transparent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.sparks {
+  position: absolute;
+  left: -20%; top: -22%;
+  width: 140%; height: 144%;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+}
+.sparking .sparks { opacity: 1; }
+.sparks path {
+  fill: none;
+  stroke: var(--spark);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px var(--spark));
+  opacity: 0;
+}
+.sparking .sparks path { animation: zap .18s steps(1, end) infinite; }
+.sparking .sparks path:nth-child(2n) { animation-duration: .23s; animation-delay: -.07s; }
+.sparking .sparks path:nth-child(3n) { animation-duration: .29s; animation-delay: -.13s; }
+@keyframes zap { 0% { opacity: 1; } 45% { opacity: 0; } 70% { opacity: 1; } 85% { opacity: 0; } }
+.sparking .device { animation: shake .1s linear infinite; }
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 1px); }
+  50% { transform: translate(2px, -1px); }
+  75% { transform: translate(-1px, -1px); }
+}
+.damaged .plate rect { fill: var(--bad); }
+.crack { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity .3s; }
+.damaged .crack { opacity: 1; }
+.crack path { fill: none; stroke: var(--crack); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.smoke { position: absolute; left: 50%; top: 0; width: 0; height: 0; opacity: 0; transition: opacity .4s; z-index: 2; }
+.damaged .smoke, .sparking .smoke { opacity: 1; }
+.smoke i {
+  position: absolute;
+  width: 48px; height: 48px;
+  margin-left: -24px;
+  border-radius: 50%;
+  background: var(--smoke);
+  filter: blur(10px);
+  animation: smoke 2.6s ease-out infinite;
+}
+.smoke i:nth-child(2) { animation-delay: -.9s; margin-left: -4px; }
+.smoke i:nth-child(3) { animation-delay: -1.7s; margin-left: -44px; }
+@keyframes smoke {
+  0% { transform: translateY(10px) scale(.4); opacity: 0; }
+  25% { opacity: .9; }
+  100% { transform: translateY(-120px) scale(1.7); opacity: 0; }
+}
+
+/* ---------- Animated mode (set by script when motion is allowed) ---------- */
+.anim #intro { height: 520vh; }
+.anim #intro .stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  padding-block: 0;
+  overflow: hidden;
+  display: block;
+}
+.anim .layer { position: absolute; inset: 0; display: grid; place-items: center; }
+.anim .hero { pointer-events: none; }
+.anim .layer-head { align-items: start; padding-top: calc(env(safe-area-inset-top, 0px) + 9vh); }
+.anim .layer-pair { padding-top: 8vh; }
+.anim .hint {
+  display: flex;
+  position: absolute;
+  left: 0; right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+}
+.anim .scene { height: calc(var(--len, 300) * 1vh); }
+.anim .scene .stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  justify-content: safe center;
+  padding-block: calc(env(safe-area-inset-top, 0px) + 24px) calc(env(safe-area-inset-bottom, 0px) + 24px);
+}
+@media (max-height: 640px) {
+  .anim .scene-head p { display: none; }
+}
+.anim .caps > .cap { grid-area: 1 / 1; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; }
+.anim .caps > .cap.on { opacity: 1; transform: none; }
+.anim #s5 .opt-card { opacity: .38; }
+.anim #s5 .opt-card.on { opacity: 1; border-color: var(--accent); }
+
+/* ---------- Regular sections ---------- */
+.section { border-top: 1px solid var(--line); padding-block: 88px; }
+.section-inner { max-width: 1080px; margin: 0 auto; display: grid; gap: 28px; }
+.section-head { display: grid; gap: 6px; max-width: 680px; }
+.section-head h2 { margin: 0; font-size: clamp(24px, 3.2vw, 38px); font-weight: 600; line-height: 1.25; text-wrap: balance; }
+.section-head p { margin: 0; color: var(--fg-muted); }
+
+/* Recommendation */
+.reco {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(24px, 5vw, 72px);
+  align-items: center;
+}
+#reco { --u: clamp(0.8px, 0.16vw, 1.5px); }
+.reco-title {
+  font-family: var(--font-display);
+  font-stretch: 118%;
+  font-weight: 800;
+  font-size: clamp(28px, 4vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -.015em;
+  margin: 0;
+}
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+.stat { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 2px; }
+.stat .v { font-size: clamp(20px, 2.2vw, 26px); font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .k { font-size: 13px; color: var(--fg-muted); }
+.reasons { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.reasons li::marker { color: var(--accent); font-family: var(--font-mono); }
+.reco-body { display: grid; gap: 20px; min-width: 0; }
+/* Capacity picker: one card per recommendation so all three are visible up front */
+.picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.picker button {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.picker button:not(.on):hover { border-color: var(--fg-muted); }
+.picker button.on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--card));
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.picker .cap {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  font-weight: 800;
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.1;
+}
+.picker button.on .cap { color: var(--accent); }
+.picker .mdl { color: var(--fg-muted); font-size: 12.5px; }
+.picker .prc { font-weight: 600; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.reco.enter { animation: spec-in .5s cubic-bezier(.2, .8, .2, 1); }
+button.alt {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 14.5px;
+  background: transparent;
+  color: var(--fg-muted);
+  transition: border-color .2s;
+}
+button.alt:hover { border-color: var(--accent); }
+.alt b { color: var(--fg); font-weight: 600; margin-right: 6px; }
+.alt .arrow { color: var(--accent); font-size: 18px; }
+
+/* Combos table */
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+table.combos { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 640px; }
+.combos th, .combos td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.combos th { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; color: var(--fg-muted); letter-spacing: .06em; }
+.combos td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.combos th.n { text-align: right; }
+.combos tr:last-child td { border-bottom: 0; }
+.combos tr.reco-row td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.combos tr.reco-row td:first-child { font-weight: 600; }
+
+/* Calculator */
+.calc {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: start;
+}
+.controls { display: grid; gap: 22px; min-width: 0; }
+.field { display: grid; gap: 8px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.field > legend, .field > label.lbl {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  padding: 0;
+  margin-bottom: 8px;
+}
+.field .help { font-size: 12.5px; color: var(--fg-muted); margin: 0; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label {
+  border: 1px solid var(--line);
+  background: var(--card);
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.seg label small { font-size: 11.5px; color: var(--fg-muted); }
+.seg input:checked + label { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.seg input:checked + label small { color: var(--bg); opacity: .75; }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg input:disabled + label { opacity: .35; cursor: not-allowed; }
+select, input[type="number"] {
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--fg);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  max-width: 100%;
+}
+select:focus-visible, input:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14.5px; cursor: pointer; }
+.check input { width: 17px; height: 17px; accent-color: var(--accent); }
+
+.summary {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.summary .ttl { font-size: 13px; color: var(--fg-muted); }
+.summary .total {
+  font-family: var(--font-display);
+  font-stretch: 110%;
+  font-weight: 800;
+  font-size: clamp(30px, 3.6vw, 42px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.mini-stats div { display: grid; gap: 0; }
+.mini-stats .v { font-weight: 600; font-size: 17px; font-variant-numeric: tabular-nums; }
+.mini-stats .k { font-size: 12px; color: var(--fg-muted); }
+.lines { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13.5px; border-top: 1px solid var(--line); padding-top: 12px; }
+.lines li { display: flex; justify-content: space-between; gap: 12px; }
+.lines li span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.warns { display: grid; gap: 6px; }
+.warns p { margin: 0; font-size: 13px; padding-left: 10px; border-left: 3px solid var(--warn); }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+button {
+  font: inherit;
+  font-size: 14px;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: 1px solid var(--fg);
+  background: var(--fg);
+  color: var(--bg);
+}
+button.ghost-btn { background: transparent; color: var(--fg); border-color: var(--line); }
+button.link-btn { background: transparent; color: var(--accent); border: 0; padding: 4px 0; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+
+.compare-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.cmp-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 6px;
+  background: var(--card);
+}
+.cmp-card .t { font-weight: 600; font-size: 14.5px; }
+.cmp-card .m { font-size: 13px; color: var(--fg-muted); }
+.cmp-card .p { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.empty { color: var(--fg-muted); font-size: 14px; margin: 0; }
+
+details.prices { border: 1px solid var(--line); border-radius: 12px; padding: 0 18px; }
+details.prices summary { cursor: pointer; padding-block: 14px; font-weight: 600; font-size: 14.5px; }
+.price-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px 20px; padding-bottom: 18px; }
+.price-grid label { display: grid; gap: 4px; font-size: 13px; color: var(--fg-muted); }
+.price-grid .grp { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .1em; color: var(--accent); margin-top: 8px; }
+
+.source {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-muted);
+  padding-block: 0 56px;
+  text-align: center;
+  display: grid;
+  gap: 4px;
+}
+
+/* ---------- Prev / next checkpoint buttons ---------- */
+.pager {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 16px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 14px -6px var(--shadow);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.nav-btn {
+  width: 44px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--fg);
+  transition: opacity .2s, background .2s;
+}
+.nav-btn + .nav-btn { border-top: 1px solid var(--line); }
+.nav-btn svg { width: 18px; height: 18px; }
+.nav-btn:not(:disabled):hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.nav-btn:disabled { opacity: .3; cursor: default; }
+.nav-btn:focus-visible { outline-offset: -3px; }
+
+/* ---------- Access, backup, warranty sections ---------- */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+.opt-card p.note { font-size: 12.5px; }
+.opt-card h3 .num { font-size: 14px; font-weight: 500; color: var(--fg-muted); }
+.opt-card ul.checks li { display: block; border: 0; padding: 2px 0 2px 22px; position: relative; }
+.opt-card ul.checks li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: 600; }
+.route { fill: none; stroke: var(--accent); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 3 5; animation: flow 1.4s linear infinite; }
+.route.qc { stroke: var(--fg-muted); animation-duration: 2.2s; }
+
+.net svg { display: block; width: 100%; height: auto; }
+.net .net-v { display: none; }
+.net .zone { fill: var(--card); stroke: var(--line); stroke-width: 1.2; }
+.net .zlbl { font-family: var(--font-body); font-size: 15px; font-weight: 600; fill: var(--fg-muted); }
+.net .ico rect, .net .ico path { fill: none; stroke: var(--fg); stroke-width: 2; stroke-linecap: round; }
+.net .nas-ico .body { fill: var(--chassis-1); stroke: var(--chassis-edge); }
+.net .bayi { fill: var(--tray); }
+.net .lan { fill: none; stroke: var(--fg-muted); stroke-width: 2; }
+.net .tube { fill: none; stroke: var(--accent); stroke-opacity: .16; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
+.net .cloud { fill: var(--line); }
+.net .lock rect { fill: var(--accent); }
+.net .lock path { fill: none; stroke: var(--accent); stroke-width: 2.2; }
+.net .lbl {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--fg);
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+.net .lbl.s { font-size: 13px; font-weight: 500; fill: var(--fg-muted); }
+
+#backup { --u: clamp(0.55px, 0.08vw, 0.75px); }
+.bk-flow { display: flex; align-items: center; justify-content: center; gap: clamp(12px, 3vw, 32px); padding-block: 12px; }
+.bk-node { display: grid; justify-items: center; gap: 12px; }
+.bk-lbl { font-size: 14px; color: var(--fg-muted); text-align: center; }
+.bk-lbl b { color: var(--fg); }
+.bk-arrow { display: grid; justify-items: center; gap: 6px; }
+.bk-arrow svg { width: clamp(110px, 16vw, 170px); height: auto; overflow: visible; }
+.arrow-head { fill: none; stroke: var(--accent); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ext-hdd svg { display: block; width: clamp(56px, 7vw, 84px); height: auto; }
+
+.wty { display: grid; gap: 8px; max-width: 760px; }
+.wty-bar { display: flex; height: 44px; }
+.wty-bar .seg { display: flex; align-items: center; padding-inline: 14px; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+.wty-bar .base { flex: 3; background: var(--accent); color: var(--plate-fg); border-radius: 10px 0 0 10px; }
+.wty-bar .ext {
+  flex: 2;
+  color: var(--fg);
+  border: 1.5px dashed var(--accent);
+  border-left: 0;
+  border-radius: 0 10px 10px 0;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent) 0 8px, color-mix(in srgb, var(--accent) 8%, transparent) 8px 16px);
+}
+.wty-axis { position: relative; height: 18px; font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); }
+.wty-axis span { position: absolute; top: 0; transform: translateX(-50%); }
+.wty-axis span:first-child { transform: none; }
+.wty-axis span:last-child { transform: translateX(-100%); }
+
+@media (max-width: 700px) {
+  .net .net-h { display: none; }
+  .net .net-v { display: block; max-width: 420px; margin: 0 auto; }
+}
+@media (max-width: 560px) {
+  .bk-flow { flex-direction: column; }
+  .bk-arrow svg { transform: rotate(90deg); width: 90px; margin-block: 34px; }
+}
+
+.access-picker .cap { font-family: var(--font-body); font-size: clamp(16px, 1.9vw, 21px); font-weight: 700; }
+.net [class^="p-"] { transition: opacity .35s; }
+.net[data-focus="lan"] .p-vpn, .net[data-focus="lan"] .p-qc,
+.net[data-focus="qc"] .p-lan, .net[data-focus="qc"] .p-vpn,
+.net[data-focus="vpn"] .p-lan, .net[data-focus="vpn"] .p-qc { opacity: .14; }
+.access-detail { display: grid; gap: 12px; }
+.access-detail.enter { animation: spec-in .5s cubic-bezier(.2, .8, .2, 1); }
+.access-detail h3 { margin: 0; font-size: clamp(20px, 2.2vw, 26px); font-weight: 600; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.access-detail > p { margin: 0; color: var(--fg-muted); max-width: 720px; }
+.access-detail .note { font-size: 12.5px; }
+.access-detail .alt-note { margin: 0; font-size: 13.5px; color: var(--fg-muted); padding: 10px 14px; border-left: 3px solid var(--line); max-width: 720px; }
+.access-detail .alt-note b { color: var(--fg); font-weight: 600; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); border-top: 1px solid var(--line); }
+.fact { display: grid; gap: 2px; padding: 12px 16px 12px 0; border-bottom: 1px solid var(--line); }
+.fact .k { font-size: 12.5px; color: var(--fg-muted); }
+.fact .v { font-size: 15px; }
+
+.hold { position: sticky; }
+
+/* Capacity: a regular section driven by its buttons */
+.cap-section { border-top: 1px solid var(--line); }
+.cap-section .stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 2.6vh, 30px);
+  padding-block: 72px;
+}
+
+.pick-label { margin: 0 0 -6px; font-size: 13px; font-weight: 600; color: var(--fg-muted); }
+.cap-dots { gap: 8px; }
+.cap-dots > button {
+  font-family: var(--font-display);
+  font-stretch: 110%;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 8px 16px;
+  color: var(--fg);
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 2px 6px -3px var(--shadow);
+}
+.cap-dots > button:not(.on):hover { border-color: var(--accent); color: var(--accent); }
+.cap-dots > .on { background: var(--accent); border-color: var(--accent); color: var(--plate-fg); }
+
+/* Honestly scene: risks by frequency, then a lean plan vs a complete plan */
+.hn-board { display: grid; width: min(760px, 100%); gap: 16px; }
+.anim .hn-panel { grid-area: 1 / 1; align-self: start; transition: opacity .5s ease, transform .5s ease; }
+.anim .hn-board[data-step="2"] .hn-risks, .anim .hn-board[data-step="3"] .hn-risks { opacity: 0; transform: translateY(-16px); pointer-events: none; }
+.anim .hn-board[data-step="0"] .hn-plans, .anim .hn-board[data-step="1"] .hn-plans { opacity: 0; transform: translateY(16px); pointer-events: none; }
+.hn-risks { display: grid; gap: 12px; }
+.risk {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1), border-color .3s;
+}
+.rk-top { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.rk-top b { font-size: 16px; font-weight: 600; }
+.freq { font-size: 12.5px; color: var(--fg-muted); }
+.meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; width: var(--w); background: var(--accent); }
+.rk-fix { font-size: 13.5px; color: var(--fg-muted); }
+.rk-ex { margin: 0; padding-left: 18px; display: grid; gap: 2px; font-size: 13.5px; }
+.rk-ex li::marker { color: var(--accent); }
+.rk-fix b { color: var(--fg); font-weight: 600; }
+.anim .risk { opacity: 0; transform: translateX(-28px); }
+.anim .hn-board.in .risk { opacity: 1; transform: none; }
+.anim .hn-board.in .r2 { transition-delay: .15s; }
+.anim .hn-board.in .r3 { transition-delay: .3s; }
+.anim .meter i { transform: scaleX(0); transform-origin: 0 50%; transition: transform 1s cubic-bezier(.2, .8, .2, 1) .35s; }
+.anim .hn-board.in .meter i { transform: none; }
+.anim .hn-board[data-step="1"] .risk:not(.r1) { opacity: .3; transition-delay: 0s; }
+.hn-board[data-step="1"] .r1 { border-color: var(--accent); }
+.hn-plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.plan {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  transition: opacity .4s, border-color .3s;
+}
+.plan-k { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; color: var(--accent); }
+.plan h3 { margin: 0; font-size: clamp(15px, 1.7vw, 19px); font-weight: 600; line-height: 1.35; }
+.plan-price { margin: 0; font-size: 13px; color: var(--fg-muted); }
+.plan-price b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.cover { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13.5px; }
+.cover li { padding-left: 22px; position: relative; }
+.cover li::before { position: absolute; left: 0; font-weight: 700; }
+.cover li.y::before { content: "✓"; color: var(--ok); }
+.cover li.n { color: var(--fg-muted); }
+.cover li.n::before { content: "✕"; color: var(--bad); }
+.anim .hn-board[data-step="2"] .p-full, .anim .hn-board[data-step="3"] .p-lite { opacity: .35; }
+.hn-board[data-step="2"] .p-lite, .hn-board[data-step="3"] .p-full { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+/* Bridge scene: NAS plus the things that keep it safe */
+#extras { --u: clamp(0.55px, min(0.1vw, 0.12vh), 0.85px); }
+.xgrid {
+  display: grid;
+  grid-template-columns: auto minmax(14px, 80px) auto minmax(14px, 80px) auto;
+  grid-template-areas: "ups ll nas lr hdd" ". . vl . ." ". . vpn . .";
+  align-items: center;
+  justify-items: center;
+  max-width: 100%;
+}
+.x-ups { grid-area: ups; }
+.x-hdd { grid-area: hdd; }
+.x-vpn { grid-area: vpn; }
+.x-nas { grid-area: nas; }
+.xl-l { grid-area: ll; transform-origin: 100% 50%; }
+.xl-r { grid-area: lr; transform-origin: 0 50%; }
+.xline { width: 100%; height: 2px; background: var(--accent); }
+.xvline { grid-area: vl; width: 2px; height: clamp(24px, 5vh, 48px); background: var(--accent); transform-origin: 50% 0; }
+.xitem { display: grid; justify-items: center; gap: 4px; text-align: center; }
+.xitem svg { display: block; height: clamp(46px, 9vh, 84px); width: auto; }
+.xitem .t { font-weight: 600; font-size: clamp(13px, 1.4vw, 16px); margin-top: 4px; }
+.xitem .s { font-size: 12px; color: var(--fg-muted); }
+.anim .extras-head { grid-template-areas: "k" "h"; }
+.anim .extras-head .kicker { grid-area: k; }
+.anim .extras-head .xh { grid-area: h; }
+
+/* SHR explainer sheet */
+.why-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  padding: 7px 16px 7px 7px;
+  border-radius: 22px;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  color: var(--accent);
+  transition: background .2s;
+}
+.why-btn:hover { background: color-mix(in srgb, var(--accent) 17%, transparent); }
+.why-btn .q {
+  flex: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--plate-fg);
+  font-size: 13px;
+  font-weight: 700;
+}
+.stepper-row { display: flex; gap: 10px; align-items: center; justify-content: center; width: min(620px, 100%); }
+.stepper { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+.stepper button {
+  display: grid;
+  gap: 7px;
+  padding: 8px 6px 7px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--fg-muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.stepper button:not(.on):hover { border-color: var(--fg-muted); color: var(--fg); }
+.stepper button.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+.stepper .bar { display: block; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.stepper .bar i { display: block; width: 0; height: 100%; background: var(--accent); }
+.stepper button.done .bar i { width: 100%; }
+.play-toggle {
+  flex: none;
+  width: 40px; height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.play-toggle svg { width: 16px; height: 16px; fill: currentColor; }
+.stepper-hint { margin: -8px 0 0; font-size: 12.5px; color: var(--fg-muted); text-align: center; }
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.sheet-backdrop { position: absolute; inset: 0; background: var(--scrim); }
+.sheet-panel {
+  position: relative;
+  width: min(920px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 44px clamp(16px, 4vw, 40px) 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 20px 60px -20px var(--shadow);
+  animation: spec-in .4s cubic-bezier(.2, .8, .2, 1);
+}
+.sheet-close {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 40px; height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 760px) {
+  /* keep pinned content clear of the prev/next buttons */
+  .anim .scene .stage { padding-top: calc(env(safe-area-inset-top, 0px) + 68px); }
+  .anim #s5 .opt-card:not(.on) ul { display: none; }
+  .glance-cards { grid-template-columns: 1fr; gap: 10px; }
+  .glance-card { grid-template-columns: auto 1fr; column-gap: 16px; row-gap: 2px; padding: 14px 16px; }
+  .glance-card .cap { grid-row: span 4; align-self: center; font-size: 30px; }
+  .glance-card .cap small { display: block; margin: 2px 0 0; }
+  .glance-card .model { margin-top: 0; font-size: 16px; }
+  .glance-card .spec { font-size: 13px; }
+  .glance-card .total { margin-top: 2px; padding-top: 0; border-top: 0; font-size: 16px; }
+  .glance { gap: 12px; }
+  .glance-cards { gap: 8px; }
+  .glance-card { padding: 10px 14px; }
+  .glance-card .cap { font-size: 26px; }
+  .gl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
+  .gl-item + .gl-item { border-left: 0; padding-left: 0; }
+  .gl-item:nth-child(even) { border-left: 1px solid var(--line); padding-left: 14px; }
+  .glance-large, .gl-head { font-size: 12px; }
+  .glance-more { padding: 8px 18px; }
+  #s4 { --k: clamp(1.05px, min(0.34vw, 0.22vh), 2px); }
+  .raid-panel .name small { display: block; margin-left: 0; text-align: center; }
+  .raid-panel .name { text-align: center; }
+
+  /* combinations table becomes stacked cards */
+  .table-scroll { overflow-x: visible; }
+  table.combos { min-width: 0; }
+  .combos thead { display: none; }
+  .combos tr { display: grid; grid-template-columns: 1fr; gap: 3px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .combos tr:last-child { border-bottom: 0; }
+  .combos td { padding: 0; border: 0; white-space: normal; }
+  .combos td:first-child { font-weight: 600; margin-bottom: 4px; }
+  .combos td.n { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+  .combos td.n::before { content: attr(data-label); color: var(--fg-muted); }
+  .combos tr.reco-row { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  .combos tr.reco-row td { background: transparent; }
+
+  .picker button { padding: 10px 10px; }
+  .access-picker .cap { font-size: 13.5px; overflow-wrap: anywhere; }
+  .stepper { gap: 5px; }
+  .plan { padding: 12px; }
+  .risk { padding: 11px 13px; gap: 6px; }
+  .rk-ex { font-size: 12.5px; }
+  .cover { font-size: 12.5px; }
+  .stepper button { font-size: 12px; padding: 7px 4px 6px; }
+  .why-btn { font-size: 13px; }
+  .compare { grid-template-columns: 1fr 1fr; grid-template-areas: "a b" "mid mid"; gap: 22px 12px; margin-top: 12px; }
+  .viz[data-view="exp"] .dx-layer { transform: translateX(-50%) translateY(-52%) scale(.62); }
+  .spec-title { font-size: 24px; }
+  .spec-vals .a, .spec-vals .b { text-align: center; }
+  .board-wrap { grid-template-columns: 1fr; gap: 14px; }
+  .anim #s5 .opt-card p { display: none; }
+  .anim #s5 .opt-card { padding: 10px 14px; }
+  .reco { grid-template-columns: 1fr; justify-items: start; }
+  .calc { grid-template-columns: 1fr; }
+  .summary { position: static; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint::after, .viz[data-view="lan"] .flow, .spec-card.enter, .route, .sheet-panel { animation: none; }
+  .risk, .meter i, .hn-panel { transition: none; }
+  .plate, .blk, .blk-t, .col .x, .hl-ring { transition: none; }
+  .links path { animation: none; }
+}
+</style>
+
+<main>
+  <!-- ===== Scene 1: intro ===== -->
+  <section id="intro" class="wrap">
+    <div class="stage">
+      <div class="layer layer-hero">
+        <div class="hero">
+          <span class="hero-eyebrow">법무법인 자료 서버 검토 · 2026.10</span>
+          <h1 class="hero-word">NAS</h1>
+          <span class="hero-sub">Network Attached Storage</span>
+        </div>
+      </div>
+
+      <div class="layer layer-glance">
+        <div class="glance">
+          <div class="intro-head">
+            <span class="kicker">AT A GLANCE</span>
+            <h2>용량별 추천 구성</h2>
+            <p class="glance-note">본체와 HDD만 더한 금액입니다.</p>
+          </div>
+          <div class="glance-cards" id="glance-cards"></div>
+          <div class="glance-large">
+            <span class="gl-head">더 큰 용량이 필요하다면</span>
+            <div class="gl-grid" id="glance-large"></div>
+            <p class="gl-warn">지금 자료(1TB 미만)에는 필요 없는 용량입니다. 디스크가 클수록 고장 난 디스크를 복구하는 데 하루 이상 걸려, 그동안 버틸 수 있는 SHR-2(디스크 2개 고장 대비)를 권합니다.</p>
+          </div>
+          <button type="button" class="ghost-btn glance-more" id="glance-more">모든 선택지 다 보기 <span aria-hidden="true">↓</span></button>
+        </div>
+      </div>
+
+      <div class="layer layer-head">
+        <div class="intro-head">
+          <span class="kicker">CANDIDATES</span>
+          <h2 class="family">Synology DiskStation</h2>
+        </div>
+      </div>
+
+      <div class="layer layer-pair">
+        <div class="pair">
+          <div class="unit small">
+            <div class="device" data-bays="2" data-width="106" data-name="DS725+"></div>
+            <div class="unit-label">
+              <span class="model">DS725+</span>
+              <span class="meta">2베이 · 정면 106×166mm</span>
+              <span class="price" data-price="ds725">1,212,000원</span>
+            </div>
+          </div>
+          <div class="unit big">
+            <div class="device" data-bays="4" data-width="199" data-name="DS925+"></div>
+            <div class="unit-label">
+              <span class="model">DS925+</span>
+              <span class="meta">4베이 · 정면 199×166mm</span>
+              <span class="price" data-price="ds925">1,298,000원</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hint" aria-hidden="true">아래로 스크롤</div>
+    </div>
+  </section>
+
+  <!-- ===== Scene 2: differences ===== -->
+  <section id="s2" class="scene wrap" style="--len: 680">
+    <div class="stage">
+      <div class="scene-head">
+        <span class="kicker">DIFFERENCES</span>
+        <h2>2베이와 4베이, 무엇이 다른가</h2>
+      </div>
+      <div class="compare">
+        <div class="dev-a"><div class="viz" id="viz-a"></div><span class="viz-name">DS725+</span></div>
+        <div class="mid" id="spec-stage" aria-live="polite"></div>
+        <div class="dev-b"><div class="viz" id="viz-b"></div><span class="viz-name">DS925+</span></div>
+      </div>
+      <p class="foot">사양: Synology 공식 사양 기준</p>
+    </div>
+  </section>
+
+  <!-- ===== Scene 3: capacity ===== -->
+  <section id="s3" class="cap-section wrap">
+    <div class="stage">
+      <div class="scene-head">
+        <span class="kicker">CAPACITY</span>
+        <h2>같은 용량, 다른 구성</h2>
+        <p>실제로 쓸 수 있는 총용량 기준입니다. DS725+는 디스크 2개(SHR), DS925+는 디스크 4개(SHR-2)로 계산했습니다.</p>
+      </div>
+      <button type="button" class="why-btn" id="btn-why"><span class="q" aria-hidden="true">?</span>왜 넣는 하드보다 쓸 수 있는 용량이 적나요?</button>
+      <p class="pick-label">쓸 수 있는 용량을 골라 보세요</p>
+      <div class="dots cap-dots" id="s3-dots">
+        <button type="button" aria-label="4TB 구성 보기">4TB</button>
+        <button type="button" aria-label="8TB 구성 보기">8TB</button>
+        <button type="button" aria-label="16TB 구성 보기">16TB</button>
+        <button type="button" aria-label="20TB 구성 보기">20TB</button>
+        <button type="button" aria-label="24TB 구성 보기">24TB</button>
+        <button type="button" aria-label="32TB 구성 보기">32TB</button>
+        <button type="button" aria-label="40TB 구성 보기">40TB</button>
+      </div>
+      <div class="big-cap"><span id="s3-big">16TB</span><small>쓸 수 있는 용량</small></div>
+      <div class="cap-pair">
+        <div class="cap-unit">
+          <div class="device" id="s3-a" data-bays="2" data-width="106" data-name="DS725+"></div>
+          <div class="cap-dev" id="s3-a-cap"></div>
+        </div>
+        <div class="cap-unit">
+          <div class="device" id="s3-b" data-bays="4" data-width="199" data-name="DS925+"></div>
+          <div class="cap-dev" id="s3-b-cap"></div>
+        </div>
+      </div>
+      <div class="caps" id="s3-caps">
+        <p class="cap"><b>4TB</b>는 DS925+로도 4TB 디스크 2개로 만들 수 있지만, 베이 2칸이 그대로 비고 값만 <span class="num" data-diff>86,000원</span> 더 듭니다. 이 용량이라면 DS925+를 살 이유가 없습니다.</p>
+        <p class="cap"><b>8TB</b>는 두 기기 가격이 비슷합니다. 차이 <span class="num" id="s3-diff8"></span>로 DS925+는 디스크 2개가 동시에 고장 나도 버팁니다.</p>
+        <p class="cap"><b>16TB</b>는 지금 자료(1TB 미만)의 16배 이상 여유입니다.</p>
+        <p class="cap"><b>20TB</b>는 DS725+가 만들 수 있는 최대 용량입니다(20TB 디스크 2개). DS925+로 정확히 20TB를 만들려면 10TB 디스크가 필요한데 옵션에 없어, 가장 가까운 구성은 24TB입니다.</p>
+        <p class="cap"><b>24TB</b>부터는 DS925+만 가능합니다. DS725+는 디스크가 2개라 가장 큰 20TB 디스크로도 20TB가 최대입니다.</p>
+        <p class="cap"><b>32TB</b>는 DS925+에 16TB 디스크 4개를 넣으면 됩니다. 지금 자료 규모로는 필요하지 않습니다.</p>
+        <p class="cap"><b>40TB</b>까지도 DS925+에 20TB 디스크 4개를 넣으면 가능합니다. 다만 지금 자료 규모로는 여기까지 쓸 필요가 없습니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SHR explainer: a sheet opened from the capacity scene ===== -->
+  <div class="sheet" id="shr-sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" id="s4" role="dialog" aria-modal="true" aria-labelledby="shr-title">
+      <button type="button" class="sheet-close" data-close aria-label="닫기">×</button>
+      <div class="scene-head">
+        <span class="kicker">SHR · SYNOLOGY HYBRID RAID</span>
+        <h2 id="shr-title">왜 넣는 하드보다 쓸 수 있는 용량이 적나요?</h2>
+        <p>디스크 일부를 고장 대비용으로 쓰기 때문입니다. SHR은 데이터와 함께 사본이나 복구용 정보를 적어 두어, 디스크가 고장 나도 자료를 지키는 Synology의 디스크 구성 방식입니다.</p>
+      </div>
+      <div class="stepper-row">
+        <div class="stepper" id="s4-dots" role="group" aria-label="단계">
+          <button type="button"><span class="bar"><i></i></span><span>정상</span></button>
+          <button type="button"><span class="bar"><i></i></span><span>1개 고장</span></button>
+          <button type="button"><span class="bar"><i></i></span><span>2개 고장</span></button>
+          <button type="button"><span class="bar"><i></i></span><span>용량 계산</span></button>
+        </div>
+        <button type="button" class="play-toggle" id="s4-play" aria-label="일시정지"></button>
+      </div>      <div class="raid-pair">
+        <div class="raid-panel">
+          <span class="name">DS725+<small>SHR · 디스크 2개</small></span>
+          <div id="raid-a"></div>
+          <span class="status" id="raid-a-st"></span>
+        </div>
+        <div class="raid-panel">
+          <span class="name">DS925+<small>SHR-2 · 디스크 4개</small></span>
+          <div id="raid-b"></div>
+          <span class="status" id="raid-b-st"></span>
+        </div>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background: var(--data)"></i>데이터</span>
+        <span><i style="background: var(--data-copy)"></i>데이터 사본</span>
+        <span><i style="background: var(--parity)"></i>복구용 정보(패리티)</span>
+        <span><i style="background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent)"></i>복구에 쓰는 조각</span>
+      </div>
+      <div class="caps" id="s4-caps">
+        <p class="cap">디스크 2개짜리 SHR은 같은 내용을 두 디스크에 똑같이 적습니다(미러링). SHR-2는 데이터와 복구용 정보 2벌을 4개 디스크에 나눠 적습니다.</p>
+        <p class="cap"><b>디스크 1개 고장</b>: 새 디스크로 바꾸면 줄마다 남은 조각으로 잃은 조각을 다시 채웁니다. SHR(2개)은 옆 디스크의 사본을 복사하고, SHR-2는 같은 줄의 남은 조각으로 계산해 냅니다.</p>
+        <p class="cap"><b>디스크 2개 고장</b>: SHR(2개)은 복사할 원본이 남지 않아 데이터를 잃습니다. SHR-2는 줄마다 남은 2조각만으로 나머지 2조각을 계산해 복구합니다. 복구에 하루 이상 걸리는 대용량 디스크일수록 이 차이가 중요합니다.</p>
+        <p class="cap"><b>쓸 수 있는 용량</b>: SHR(2개)은 디스크 1개분, SHR-2(4개)는 디스크 2개분입니다. 8TB × 4로 SHR-2를 만들면 16TB를 씁니다.</p>
+      </div>
+      <p class="foot">법무 자료는 한 번 잃으면 되돌릴 수 없습니다. 쓸 수 있는 용량을 조금 내주더라도 고장 대비를 갖추는 것을 권합니다.</p>
+    </div>
+  </div>
+
+  <!-- ===== Scene 5: memory & M.2 ===== -->
+  <section id="s5" class="scene wrap" style="--len: 300">
+    <div class="stage">
+      <div class="scene-head">
+        <span class="kicker">MEMORY · M.2</span>
+        <h2>추가 메모리와 M.2 SSD</h2>
+        <p>두 기기 모두 메모리 슬롯 2개(기본 4GB 1개 장착)와 M.2 NVMe 슬롯 2개가 있습니다.</p>
+      </div>
+      <div class="board-wrap">
+        <div id="board"></div>
+        <div class="opt-cards">
+          <div class="opt-card" id="card-mem">
+            <h3>추가 메모리 <span class="chip muted">필요 시 나중에</span></h3>
+            <p>4~5명이 문서를 저장하고 공유하는 데 기본 4GB로 충분합니다. 정품 메모리만 공식 지원되고 옵션 가격이 높습니다. 사용하다가 메모리 사용량이 계속 높게 나오면 그때 추가해도 됩니다.</p>
+            <ul>
+              <li><span>D4ES04-4G (합계 8GB)</span><span class="num" data-price="mem4">+590,000원</span></li>
+              <li class="soldout"><span>D4ES03-8G (품절)</span><span class="num" data-price="mem8">+782,000원</span></li>
+              <li><span>D4ES03-16G (합계 20GB)</span><span class="num" data-price="mem16">+1,733,000원</span></li>
+            </ul>
+          </div>
+          <div class="opt-card" id="card-m2">
+            <h3>M.2 SSD 캐시 <span class="chip muted">필요 없음</span></h3>
+            <p>SSD 캐시는 여러 사람이 작은 파일을 동시에 자주 열 때 빨라집니다. 4~5명이 문서 위주로 쓰는 사무실에서는 효과가 크지 않고, 사무실 네트워크 속도가 먼저 한계가 됩니다. 읽기·쓰기 캐시는 SSD 2개가 필요합니다.</p>
+            <ul>
+              <li><span>SNV3410-400G</span><span class="num" data-price="ssd3410">+725,000원</span></li>
+              <li><span>SNV5420-400G</span><span class="num" data-price="ssd5420s">+817,000원</span></li>
+              <li><span>SNV5420-800G</span><span class="num" data-price="ssd5420l">+1,270,000원</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <p class="foot">메모리와 M.2 SSD는 파일을 올리고 내려받는 속도를 높이기 위한 선택 사항입니다. 없어도 NAS는 정상적으로 동작합니다.</p>
+    </div>
+  </section>
+
+  <!-- ===== Recommendation ===== -->
+  <section id="reco" class="section wrap">
+    <div class="section-inner">
+      <div class="section-head">
+        <span class="kicker">RECOMMENDATION</span>
+        <h2 id="reco-h2">추천 구성</h2>
+        <p>필요한 용량에 따라 추천 구성이 달라집니다. 용량을 골라 보세요.</p>
+      </div>
+      <div class="picker" id="reco-tabs" role="group" aria-label="용량별 추천 구성"></div>
+      <div class="reco" id="reco-view"></div>
+    </div>
+  </section>
+
+  <!-- ===== Bridge: what else keeps the NAS safe ===== -->
+  <section id="extras" class="scene wrap" style="--len: 260">
+    <div class="stage">
+      <div class="scene-head extras-head">
+        <span class="kicker">BEYOND THE NAS</span>
+        <h2 class="xh xh1">NAS만으로 끝이 아닙니다</h2>
+        <h2 class="xh xh2">함께 두면 더 오래, 더 안전하게 쓸 수 있습니다</h2>
+      </div>
+      <div class="xgrid">
+        <div class="xitem x-ups">
+          <svg viewBox="0 0 70 120" aria-hidden="true">
+            <rect x="0.5" y="0.5" width="69" height="119" rx="6" style="fill:var(--chassis-2);stroke:var(--chassis-edge)"/>
+            <rect x="8" y="10" width="54" height="30" rx="3" style="fill:var(--face)"/>
+            <rect x="15" y="17" width="36" height="16" rx="2" style="fill:none;stroke:var(--led-off)" stroke-width="1.2"/>
+            <g class="ups-bars"><rect x="18" y="20" width="6.5" height="10" rx="1"/><rect x="26" y="20" width="6.5" height="10" rx="1"/><rect x="34" y="20" width="6.5" height="10" rx="1"/><rect x="42" y="20" width="6.5" height="10" rx="1"/></g>
+            <circle class="ups-led" cx="35" cy="78" r="2.2"/>
+          </svg>
+          <span class="t">UPS</span><span class="s">정전 대비</span>
+        </div>
+        <div class="xline xl-l" aria-hidden="true"></div>
+        <div class="x-nas"><div class="device" data-bays="4" data-width="199" data-name="NAS"></div></div>
+        <div class="xline xl-r" aria-hidden="true"></div>
+        <div class="xitem x-hdd">
+          <svg viewBox="0 0 80 110" aria-hidden="true">
+            <rect x="0.5" y="0.5" width="79" height="109" rx="8" style="fill:var(--chassis-1);stroke:var(--chassis-edge)"/>
+            <rect x="12" y="14" width="56" height="4" rx="2" style="fill:var(--vent)"/>
+            <rect x="12" y="24" width="56" height="4" rx="2" style="fill:var(--vent)"/>
+            <circle class="led-disk" cx="40" cy="92" r="2.4"/>
+          </svg>
+          <span class="t">외장 HDD</span><span class="s">자료 백업</span>
+        </div>
+        <div class="xvline" aria-hidden="true"></div>
+        <div class="xitem x-vpn">
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M32 4 L54 12 V30 C54 45 44 55 32 60 C20 55 10 45 10 30 V12 Z" style="fill:color-mix(in srgb, var(--accent) 14%, transparent);stroke:var(--accent)" stroke-width="2"/>
+            <rect x="23" y="29" width="18" height="14" rx="2" style="fill:var(--accent)"/>
+            <path d="M27 29 v-5 a5 5 0 0 1 10 0 v5" style="fill:none;stroke:var(--accent)" stroke-width="3"/>
+          </svg>
+          <span class="t">VPN</span><span class="s">안전한 외부 접속</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Power outage ===== -->
+  <section id="outage" class="scene wrap" style="--len: 940">
+    <div class="stage" id="outage-stage">
+      <div class="blackout" id="outage-black" aria-hidden="true"></div>
+      <div class="scene-head">
+        <span class="kicker">POWER OUTAGE</span>
+        <h2>만약 갑자기 정전이 된다면?</h2>
+      </div>
+      <div class="room" id="outage-room">
+        <div class="lamp" aria-hidden="true"><span class="cord"></span><span class="shade"></span><span class="bulb"></span></div>
+        <div class="cone" aria-hidden="true"></div>
+        <div class="pool" aria-hidden="true"></div>
+        <div class="outage-dev" id="outage-dev">
+          <div class="smoke" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="device" id="outage-nas" data-bays="4" data-width="199" data-name="DS925+"></div>
+          <svg class="crack" viewBox="0 0 199 166" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M122 6 L113 38 L127 60 L109 94 L119 128 L111 160 M127 60 L146 72 L141 90 M109 94 L92 104"/>
+          </svg>
+          <svg class="sparks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M18 22 L24 16 L21 12 L29 5"/>
+            <path d="M80 20 L74 13 L79 10 L72 2"/>
+            <path d="M86 52 L94 48 L90 44 L99 40"/>
+            <path d="M14 60 L6 56 L10 52 L1 48"/>
+            <path d="M78 84 L84 92 L80 94 L88 99"/>
+            <path d="M50 17 L46 10 L53 7 L49 0"/>
+            <path d="M24 86 L17 92 L22 95 L13 100"/>
+          </svg>
+          <div class="zap-glow" id="outage-zap" aria-hidden="true"></div>
+          <div class="ups-cable" aria-hidden="true"></div>
+          <div class="ups" aria-hidden="true">
+            <svg viewBox="0 0 70 120">
+              <rect x="0.5" y="0.5" width="69" height="119" rx="6" style="fill:var(--chassis-2);stroke:var(--chassis-edge)"/>
+              <rect x="8" y="10" width="54" height="30" rx="3" style="fill:var(--face)"/>
+              <rect x="15" y="17" width="36" height="16" rx="2" style="fill:none;stroke:var(--led-off)" stroke-width="1.2"/>
+              <rect x="51" y="21.5" width="3" height="7" rx="1" style="fill:var(--led-off)"/>
+              <g class="ups-bars">
+                <rect x="18" y="20" width="6.5" height="10" rx="1"/>
+                <rect x="26" y="20" width="6.5" height="10" rx="1"/>
+                <rect x="34" y="20" width="6.5" height="10" rx="1"/>
+                <rect x="42" y="20" width="6.5" height="10" rx="1"/>
+              </g>
+              <circle cx="35" cy="60" r="6" style="fill:none;stroke:var(--led-off)" stroke-width="1.2"/>
+              <circle class="ups-led" cx="35" cy="78" r="2.2"/>
+              <path d="M14 96 H56 M14 102 H56 M14 108 H56" style="stroke:var(--vent)" stroke-width="2"/>
+            </svg>
+          </div>
+        </div>
+        <span class="status outage-status" id="outage-status"></span>
+      </div>
+      <div class="caps" id="outage-caps">
+        <p class="cap">NAS는 1년 365일, 하루 24시간 멈추지 않고 사무실 자료를 지켜야 합니다.</p>
+        <p class="cap">건물 전체가 정전되거나 두꺼비집이 내려가는 일은 예고 없이 찾아옵니다.</p>
+        <p class="cap">이미 저장된 자료는 대부분 안전하지만, 그 순간 쓰고 있던 파일은 저장되지 못한 채 끊깁니다.</p>
+        <p class="cap"><b>전기가 다시 들어오는 순간</b>, 순간적으로 높은 전압이 전원부와 디스크를 덮칠 수 있습니다.</p>
+        <p class="cap">그 결과 쓰던 파일이 깨지고, 디스크 구성을 다시 맞춰야 하며, 최악에는 기기가 고장 납니다. <b>UPS는 이 순간을 막아 줍니다.</b></p>
+        <p class="cap"><b>그래서 UPS를 둡니다.</b> 정전이 되면 UPS 배터리가 NAS를 버티게 하고, USB로 연결된 Synology NAS는 하던 작업을 정리한 뒤 스스로 안전하게 꺼집니다.</p>
+        <p class="cap">UPS를 함께 두는 것만으로도 <b>자료를 훨씬 안전하게 지킬 수 있습니다.</b></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== UPS ===== -->
+  <section id="ups" class="section wrap">
+    <div class="section-inner">
+      <div class="section-head">
+        <span class="kicker">UPS</span>
+        <h2>추천 UPS</h2>
+        <p>정전과 순간 과전압에서 NAS를 지켜 줄 무정전 전원장치입니다.</p>
+      </div>
+      <div class="reco">
+        <div class="ups-hero" aria-hidden="true">
+          <svg viewBox="0 0 70 120">
+            <rect x="0.5" y="0.5" width="69" height="119" rx="6" style="fill:var(--chassis-2);stroke:var(--chassis-edge)"/>
+            <rect x="8" y="10" width="54" height="30" rx="3" style="fill:var(--face)"/>
+            <rect x="15" y="17" width="36" height="16" rx="2" style="fill:none;stroke:var(--led-off)" stroke-width="1.2"/>
+            <rect x="51" y="21.5" width="3" height="7" rx="1" style="fill:var(--led-off)"/>
+            <g class="ups-bars">
+              <rect x="18" y="20" width="6.5" height="10" rx="1"/>
+              <rect x="26" y="20" width="6.5" height="10" rx="1"/>
+              <rect x="34" y="20" width="6.5" height="10" rx="1"/>
+              <rect x="42" y="20" width="6.5" height="10" rx="1"/>
+            </g>
+            <circle cx="35" cy="60" r="6" style="fill:none;stroke:var(--led-off)" stroke-width="1.2"/>
+            <circle class="ups-led" cx="35" cy="78" r="2.2"/>
+            <path d="M14 96 H56 M14 102 H56 M14 108 H56" style="stroke:var(--vent)" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="reco-body">
+          <p class="reco-title">APC Back-UPS BX950MI-GR</p>
+          <div class="stats">
+            <div class="stat"><span class="v num" data-price="ups">176,000원</span><span class="k">판매가 (무료배송)</span></div>
+            <div class="stat"><span class="v">950VA · 520W</span><span class="k">용량</span></div>
+            <div class="stat"><span class="v">4구</span><span class="k">출력 콘센트</span></div>
+            <div class="stat"><span class="v">2년</span><span class="k">무상 AS</span></div>
+          </div>
+          <ol class="reasons">
+            <li>NAS가 쓰는 전력은 수십 W 수준이라, 520W 용량이면 여유가 넉넉합니다.</li>
+            <li>전압이 흔들리면 자동으로 맞춰 주는 AVR과 서지 보호 기능이 있어, 정전뿐 아니라 순간 과전압도 걸러 줍니다.</li>
+            <li>NAS 뒷면 USB 포트에 연결하면 Synology가 바로 인식하고, 정전 시 스스로 안전하게 꺼집니다.</li>
+            <li>배터리는 소모품이라 보통 3~5년마다 교체합니다. APC 정품 교체 배터리를 따로 살 수 있습니다.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="section-head">
+        <h2 style="font-size: 20px;">UPS를 포함한 합계</h2>
+      </div>
+      <div class="table-scroll">
+        <table class="combos">
+          <thead>
+            <tr><th>추천 구성</th><th class="n">본체 + HDD</th><th class="n">UPS 포함 합계</th></tr>
+          </thead>
+          <tbody id="ups-totals"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Access ===== -->
+  <section id="access" class="section wrap">
+    <div class="section-inner">
+      <div class="section-head">
+        <span class="kicker">ACCESS</span>
+        <h2>사무실 안과 밖에서 접속하기</h2>
+        <p>사무실 안에서는 네트워크 드라이브로, 밖에서는 VPN이나 QuickConnect로 들어옵니다.</p>
+      </div>
+      <div class="picker access-picker" id="access-tabs" role="group" aria-label="접속 방법"></div>
+      <div class="net" id="net" data-focus="lan"></div>
+      <div class="access-detail" id="access-detail"></div>
+      <div class="two-col">
+        <div class="opt-card">
+          <h3>밖에서 자주 쓰는 직원이라면</h3>
+          <p>Synology Drive 앱으로 자주 쓰는 폴더를 노트북에 동기화해 두면, 바뀐 부분만 오가서 인터넷이 느린 곳에서도 편합니다. 밖에서의 속도는 NAS보다 사무실 인터넷의 업로드 속도에 달려 있습니다.</p>
+        </div>
+        <div class="opt-card">
+          <h3>꼭 켜 둘 보안 설정</h3>
+          <ul class="checks">
+            <li>2단계 인증(휴대폰 인증)</li>
+            <li>기본 관리자(admin) 계정 끄기</li>
+            <li>로그인 여러 번 실패 시 자동 차단</li>
+            <li>공유 링크에는 비밀번호와 만료일 설정</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Backup ===== -->
+  <section id="backup" class="section wrap">
+    <div class="section-inner">
+      <div class="section-head">
+        <span class="kicker">BACKUP</span>
+        <h2>자료를 한 벌 더</h2>
+        <p>Google Drive의 자료를 모두 옮기면 NAS가 유일한 원본이 됩니다. SHR-2는 디스크 고장에는 강하지만, 실수로 지운 파일, 랜섬웨어, 기기 전체 고장은 막지 못합니다. 그래서 외장 HDD에 사본을 하나 더 둡니다.</p>
+      </div>
+      <div class="bk-flow">
+        <div class="bk-node">
+          <div class="device" id="bk-nas" data-bays="4" data-width="199" data-name="NAS 원본"></div>
+          <span class="bk-lbl"><b>NAS</b> 원본</span>
+        </div>
+        <div class="bk-arrow">
+          <svg viewBox="0 0 160 24" aria-hidden="true"><path class="route" d="M4 12 H150"/><path class="arrow-head" d="M144 5 L154 12 L144 19"/></svg>
+          <span class="bk-lbl">매일 밤 자동 백업 · Hyper Backup</span>
+        </div>
+        <div class="bk-node">
+          <div class="ext-hdd">
+            <svg viewBox="0 0 80 110" role="img" aria-label="외장 HDD">
+              <rect x="0.5" y="0.5" width="79" height="109" rx="8" style="fill:var(--chassis-1);stroke:var(--chassis-edge)"/>
+              <rect x="12" y="14" width="56" height="4" rx="2" style="fill:var(--vent)"/>
+              <rect x="12" y="24" width="56" height="4" rx="2" style="fill:var(--vent)"/>
+              <circle class="led-disk" cx="40" cy="92" r="2.4"/>
+            </svg>
+          </div>
+          <span class="bk-lbl"><b>외장 HDD</b> 사본</span>
+        </div>
+      </div>
+      <div class="two-col">
+        <ol class="reasons">
+          <li>외장 HDD를 NAS 뒷면 USB 포트에 연결합니다. 여러 날짜의 버전을 함께 보관하니, 자료량보다 넉넉한 용량(지금 기준 4TB 이상)이 좋습니다.</li>
+          <li>Hyper Backup(DSM 무료 패키지)으로 매일 밤 자동 백업을 예약합니다. 바뀐 부분만 복사해서 빠릅니다.</li>
+          <li>날짜별 버전을 보관합니다(예: 최근 30일). 지난주 상태의 파일도 꺼낼 수 있습니다.</li>
+          <li>더 안전하게 하려면 외장 HDD 두 개를 번갈아 쓰고 하나는 사무실 밖에 보관합니다. 화재와 도난에도 대비됩니다.</li>
+        </ol>
+        <div class="card-grid">
+          <div class="opt-card">
+            <h3>스냅샷도 함께 <span class="chip muted">무료</span></h3>
+            <p>공유 폴더를 매일 사진 찍듯 저장해 두면, 실수로 지운 파일이나 랜섬웨어 피해를 몇 분 만에 이전 시점으로 되돌립니다. NAS 안에 저장되므로 외장 HDD 백업과 함께 씁니다.</p>
+          </div>
+          <div class="opt-card">
+            <h3>DS725+를 고른다면 <span class="chip warn">주의</span></h3>
+            <p>DS725+는 일반 USB 포트가 1개뿐입니다(뒷면 USB-C는 확장 유닛 DX525 전용). UPS를 연결하면 외장 HDD를 꽂을 자리가 없어, 백업은 클라우드나 네트워크로 해야 합니다. DS925+는 USB 포트가 2개라 둘 다 바로 연결됩니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Warranty & care ===== -->
+  <section id="care" class="section wrap">
+    <div class="section-inner">
+      <div class="section-head">
+        <span class="kicker">WARRANTY · CARE</span>
+        <h2>보증과 유지보수</h2>
+        <p>본체 보증은 기본 3년이고, 보증 연장과 판매자 유지보수 서비스를 따로 더할 수 있습니다. 두 서비스 모두 필수는 아닙니다. 비용이 드는 만큼, 만일의 상황에 대비하고 싶다면 가입을 고려해 보세요.</p>
+      </div>
+      <div class="wty" role="img" aria-label="보증 기간: 기본 3년, EW201로 2년 연장해 총 5년">
+        <div class="wty-bar"><span class="seg base">기본 보증 3년</span><span class="seg ext">EW201 +2년</span></div>
+        <div class="wty-axis">
+          <span style="left: 0%">0</span><span style="left: 20%">1년</span><span style="left: 40%">2년</span>
+          <span style="left: 60%">3년</span><span style="left: 80%">4년</span><span style="left: 100%">5년</span>
+        </div>
+      </div>
+      <div class="card-grid">
+        <div class="opt-card">
+          <h3>EW201 보증 연장 <span class="num" data-price="ew"></span></h3>
+          <p>Synology 공식 보증 연장 상품으로, DS725+와 DS925+ 모두 적용됩니다. 본체 보증이 3년에서 5년으로 늘어납니다. 본체만 해당하고 HDD는 따로 보증됩니다. 구매 후 정해진 기간 안에 등록해야 해서, 살 때 함께 사는 것이 안전합니다.</p>
+          <p class="note">5년 이상 쓸 계획이라면 고려해 볼 만합니다.</p>
+        </div>
+        <div class="opt-card">
+          <h3>Standard 케어 1년 <span class="num" data-price="care"></span></h3>
+          <p>판매자((주)디지탈지앤티)의 유지보수 서비스입니다. 1년 동안 정기 점검을 받고, 하드웨어가 고장 나면 장비를 먼저 교체해 주며 그동안 대체 장비를 빌려줍니다. 1년마다 연장할 수 있습니다.</p>
+          <p class="note">본체 가격에 포함된 기본 원격지원으로도 초기 설정과 사용 중 소프트웨어 문제는 도움을 받을 수 있습니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Honestly: you don't need everything ===== -->
+  <section id="honest" class="scene wrap" style="--len: 520">
+    <div class="stage">
+      <div class="scene-head">
+        <span class="kicker">WHAT YOU REALLY NEED</span>
+        <h2>솔직히, 전부 필요하지는 않습니다</h2>
+      </div>
+      <div class="hn-board" id="hn-board" data-step="0">
+        <div class="hn-panel hn-risks">
+          <div class="risk r1">
+            <div class="rk-top"><b>사람의 실수 · 랜섬웨어</b><span class="freq">가장 흔함</span></div>
+            <ul class="rk-ex">
+              <li>파일을 실수로 지우거나 다른 내용으로 덮어쓰기</li>
+              <li>폴더를 옮기다 통째로 잃어버리기</li>
+              <li>메일 첨부파일을 열었다가 랜섬웨어에 걸려 파일이 잠기기</li>
+            </ul>
+            <div class="meter"><i style="--w: 92%"></i></div>
+            <div class="rk-fix">대비: <b>외장 HDD 백업 + 스냅샷</b></div>
+          </div>
+          <div class="risk r2">
+            <div class="rk-top"><b>디스크 고장</b><span class="freq">디스크 4개를 5년 쓰면 약 24%</span></div>
+            <ul class="rk-ex">
+              <li>오래 쓴 디스크가 수명이 다해 읽히지 않기</li>
+              <li>같은 시기에 산 디스크가 비슷한 때 연달아 고장 나기</li>
+            </ul>
+            <div class="meter"><i style="--w: 48%"></i></div>
+            <div class="rk-fix">대비: <b>SHR · SHR-2</b></div>
+          </div>
+          <div class="risk r3">
+            <div class="rk-top"><b>정전 · 순간 과전압</b><span class="freq">드묾 · 서울 가구당 연 약 5분</span></div>
+            <ul class="rk-ex">
+              <li>건물 정전이나 두꺼비집이 내려가 NAS가 갑자기 꺼지기</li>
+              <li>전기가 다시 들어올 때나 낙뢰로 순간 높은 전압이 들어오기</li>
+            </ul>
+            <div class="meter"><i style="--w: 12%"></i></div>
+            <div class="rk-fix">대비: <b>UPS</b></div>
+          </div>
+        </div>
+        <div class="hn-panel hn-plans">
+          <div class="plan p-lite">
+            <span class="plan-k">기본 보호</span>
+            <h3>DS725+ · 외장 HDD</h3>
+            <p class="plan-price" id="hn-lite-price"></p>
+            <ul class="cover">
+              <li class="y">실수 · 랜섬웨어</li>
+              <li class="y">디스크 1개 고장</li>
+              <li class="n">디스크 2개 동시 고장</li>
+              <li class="n">정전 · 순간 과전압</li>
+            </ul>
+          </div>
+          <div class="plan p-full">
+            <span class="plan-k">완전 보호</span>
+            <h3>DS925+ · SHR-2 · UPS · 외장 HDD</h3>
+            <p class="plan-price" id="hn-full-price"></p>
+            <ul class="cover">
+              <li class="y">실수 · 랜섬웨어</li>
+              <li class="y">디스크 1개 고장</li>
+              <li class="y">디스크 2개 동시 고장</li>
+              <li class="y">정전 · 순간 과전압</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="caps" id="hn-caps">
+        <p class="cap">외장 HDD, SHR-2, UPS를 모두 갖춰야만 하는 것은 아닙니다. 위험마다 일어나는 빈도가 다릅니다.</p>
+        <p class="cap">가장 흔한 위험은 기기 고장보다 <b>잘못 지우거나 덮어쓰는 사람의 실수</b>입니다. 이건 외장 HDD 백업과 스냅샷이 막아 줍니다.</p>
+        <p class="cap">그래서 꼭 필요한 것만 갖추려면 <b>DS725+에 필요한 용량을 넣고, 백업용 외장 HDD 하나</b>면 충분합니다.</p>
+        <p class="cap">다만 모든 사고에 대비하려면 <b>DS925+ · SHR-2 · UPS · 외장 HDD를 모두 갖추는 것</b>이 가장 안전합니다.</p>
+      </div>
+      <p class="foot">고장률: Backblaze 2025 연간 보고서 · 정전: 한전 2025년 지역별 자료(서울)</p>
+    </div>
+  </section>
+
+  <!-- ===== Combos table ===== -->
+  <section id="combos" class="section wrap">
+    <div class="section-inner">
+      <div class="section-head">
+        <span class="kicker">COMBINATIONS</span>
+        <h2>조합별 가격 한눈에</h2>
+        <p>본체와 HDD만 더한 금액입니다. "계산기로"를 누르면 아래 계산기에 그 구성이 들어갑니다.</p>
+      </div>
+      <div class="table-scroll">
+        <table class="combos">
+          <thead>
+            <tr><th>구성</th><th class="n">쓸 수 있는 용량</th><th class="n">고장 대비</th><th class="n">합계</th><th></th></tr>
+          </thead>
+          <tbody id="combo-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Calculator ===== -->
+  <section id="calc" class="section wrap">
+    <div class="section-inner">
+      <div class="section-head">
+        <span class="kicker">CALCULATOR</span>
+        <h2>직접 구성해 보기</h2>
+        <p>고르는 대로 합계와 쓸 수 있는 용량이 바뀝니다. 마음에 드는 구성은 비교 목록에 담아 나란히 볼 수 있습니다.</p>
+      </div>
+      <div class="calc">
+        <form class="controls" id="calc-form" autocomplete="off">
+          <fieldset class="field">
+            <legend>모델</legend>
+            <div class="seg">
+              <input type="radio" name="model" id="m-ds725" value="ds725"><label for="m-ds725">DS725+ <small>2베이</small></label>
+              <input type="radio" name="model" id="m-ds925" value="ds925"><label for="m-ds925">DS925+ <small>4베이</small></label>
+            </div>
+          </fieldset>
+          <div class="field">
+            <label class="lbl" for="c-tb">디스크 1개 용량 (Synology HAT 시리즈)</label>
+            <select id="c-tb"></select>
+          </div>
+          <fieldset class="field">
+            <legend>디스크 개수</legend>
+            <div class="seg" id="c-count">
+              <input type="radio" name="count" id="n-1" value="1"><label for="n-1">1개</label>
+              <input type="radio" name="count" id="n-2" value="2"><label for="n-2">2개</label>
+              <input type="radio" name="count" id="n-3" value="3"><label for="n-3">3개</label>
+              <input type="radio" name="count" id="n-4" value="4"><label for="n-4">4개</label>
+            </div>
+          </fieldset>
+          <fieldset class="field">
+            <legend>디스크 구성 방식</legend>
+            <div class="seg">
+              <input type="radio" name="raid" id="r-basic" value="basic"><label for="r-basic">보호 없음 <small>고장 대비 0</small></label>
+              <input type="radio" name="raid" id="r-shr" value="shr"><label for="r-shr">SHR <small>고장 대비 1</small></label>
+              <input type="radio" name="raid" id="r-shr2" value="shr2"><label for="r-shr2">SHR-2 <small>고장 대비 2</small></label>
+            </div>
+            <p class="help">SHR은 디스크 2개 이상, SHR-2는 4개 이상일 때 고를 수 있습니다.</p>
+          </fieldset>
+          <div class="field">
+            <label class="lbl" for="c-mem">추가 메모리</label>
+            <select id="c-mem"></select>
+          </div>
+          <div class="field">
+            <label class="lbl" for="c-ssd">M.2 NVMe SSD</label>
+            <div class="inline">
+              <select id="c-ssd"></select>
+              <select id="c-ssd-qty" aria-label="SSD 개수">
+                <option value="1">1개</option>
+                <option value="2">2개</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="lbl" for="c-install">방문 설치</label>
+            <select id="c-install"></select>
+          </div>
+          <fieldset class="field">
+            <legend>서비스</legend>
+            <label class="check" for="c-care"><input type="checkbox" id="c-care"> Standard 케어 1년 <span class="num" data-price="care"></span></label>
+            <label class="check" for="c-ew"><input type="checkbox" id="c-ew"> EW201 보증 연장 <span class="num" data-price="ew"></span></label>
+          </fieldset>
+          <div class="field">
+            <label class="lbl" for="c-ups">UPS</label>
+            <label class="check" for="c-ups"><input type="checkbox" id="c-ups"> APC BX950MI-GR <span class="num" data-price="ups"></span></label>
+          </div>
+        </form>
+
+        <aside class="summary" aria-live="polite">
+          <div>
+            <div class="ttl" id="sum-title"></div>
+            <div class="total" id="sum-total"></div>
+          </div>
+          <div class="mini-stats">
+            <div><span class="v" id="sum-usable"></span><span class="k">쓸 수 있는 용량</span></div>
+            <div><span class="v" id="sum-tol"></span><span class="k">고장 대비 디스크</span></div>
+            <div><span class="v" id="sum-mem"></span><span class="k">메모리 합계</span></div>
+            <div><span class="v" id="sum-free"></span><span class="k">남는 베이</span></div>
+          </div>
+          <div class="warns" id="sum-warns"></div>
+          <ul class="lines" id="sum-lines"></ul>
+          <div class="btns">
+            <button type="button" id="btn-add">비교 목록에 담기</button>
+            <button type="button" class="ghost-btn" id="btn-reco">추천 구성으로</button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="section-head">
+        <h2 style="font-size: 20px;">비교 목록</h2>
+      </div>
+      <div class="compare-list" id="cmp-list"></div>
+
+      <details class="prices" id="price-edit">
+        <summary>가격 직접 수정</summary>
+        <p class="empty" style="margin-bottom: 12px;">실제 견적을 받으면 여기서 바꾸세요. 바꾼 값은 이 브라우저에만 저장되고 페이지 전체 금액에 반영됩니다.</p>
+        <div class="price-grid" id="price-grid"></div>
+        <div class="btns" style="padding-bottom: 18px;"><button type="button" class="ghost-btn" id="btn-reset-prices">기본 가격으로 되돌리기</button></div>
+      </details>
+    </div>
+  </section>
+
+  <div class="source wrap">
+    <span>가격: 네이버 시놀로지 브랜드스토어 할인가, 무료배송 · 2026.10.15 확인</span>
+    <span>사양: Synology 공식 사양 기준</span>
+    <span>UPS: 네이버 APC 브랜드스토어 판매가, 무료배송 · 2026.10.15 확인</span>
+  </div>
+</main>
+
+<nav class="pager" aria-label="페이지 이동">
+  <button type="button" class="nav-btn" id="nav-prev" aria-label="이전 위치로">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <button type="button" class="nav-btn" id="nav-next" aria-label="다음 위치로">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function () {
+  /* ================= Data ================= */
+  const TB_TO_DSM = 1e12 / Math.pow(2, 40); // DSM shows binary units
+  const PRICE_KEY = "nas-review-prices-v1";
+  const COMPARE_KEY = "nas-review-compare-v1";
+  const COMPARE_MAX = 6;
+
+  const MODELS = {
+    ds725: { name: "DS725+", bays: 2 },
+    ds925: { name: "DS925+", bays: 4 }
+  };
+  const HDD_MODELS = { 4: "HAT3300-4T", 6: "HAT3300-6T", 8: "HAT3320-8T", 12: "HAT3310-12T", 16: "HAT3310-16T", 20: "HAT3320-20T" };
+  const RAID_LABEL = { basic: "보호 없음", shr: "SHR", shr2: "SHR-2" };
+
+  const PRICE_ITEMS = [
+    { key: "ds725", group: "본체", label: "DS725+", price: 1212000 },
+    { key: "ds925", group: "본체", label: "DS925+", price: 1298000 },
+    { key: "hdd4", group: "HDD", label: "4TB · HAT3300-4T", price: 344000 },
+    { key: "hdd6", group: "HDD", label: "6TB · HAT3300-6T", price: 489000 },
+    { key: "hdd8", group: "HDD", label: "8TB · HAT3320-8T", price: 670000 },
+    { key: "hdd12", group: "HDD", label: "12TB · HAT3310-12T", price: 921000 },
+    { key: "hdd16", group: "HDD", label: "16TB · HAT3310-16T", price: 1018000 },
+    { key: "hdd20", group: "HDD", label: "20TB · HAT3320-20T", price: 1215000 },
+    { key: "mem4", group: "메모리", label: "D4ES04-4G", price: 590000, gb: 4 },
+    { key: "mem8", group: "메모리", label: "D4ES03-8G (품절)", price: 782000, gb: 8, soldOut: true },
+    { key: "mem16", group: "메모리", label: "D4ES03-16G", price: 1733000, gb: 16 },
+    { key: "ssd3410", group: "M.2 SSD", label: "SNV3410-400G", price: 725000 },
+    { key: "ssd5420s", group: "M.2 SSD", label: "SNV5420-400G", price: 817000 },
+    { key: "ssd5420l", group: "M.2 SSD", label: "SNV5420-800G", price: 1270000 },
+    { key: "instSeoul", group: "서비스", label: "방문 설치 · 서울", price: 150000 },
+    { key: "instMetro", group: "서비스", label: "방문 설치 · 경기/인천", price: 200000 },
+    { key: "instLocal", group: "서비스", label: "방문 설치 · 지방", price: 500000 },
+    { key: "care", group: "서비스", label: "Standard 케어 1년", price: 200000 },
+    { key: "ew", group: "서비스", label: "EW201 보증 연장", price: 154000 },
+    { key: "ups", group: "UPS", label: "APC BX950MI-GR", price: 176000 }
+  ];
+  const ITEM = Object.fromEntries(PRICE_ITEMS.map((it) => [it.key, it]));
+  const DEFAULT_PRICES = Object.fromEntries(PRICE_ITEMS.map((it) => [it.key, it.price]));
+
+  const COMBOS = [
+    { model: "ds725", tb: 4, count: 2, raid: "shr" },
+    { model: "ds725", tb: 8, count: 2, raid: "shr" },
+    { model: "ds725", tb: 16, count: 2, raid: "shr" },
+    { model: "ds925", tb: 4, count: 4, raid: "shr2" },
+    { model: "ds925", tb: 8, count: 4, raid: "shr2" },
+    { model: "ds925", tb: 6, count: 3, raid: "shr", note: "참고" }
+  ];
+  const RECOMMENDED = { model: "ds925", tb: 8, count: 4, raid: "shr2", mem: "none", ssd: "none", ssdQty: 1, install: "none", care: false, ew: false, ups: true };
+
+  // Recommendation per capacity tab; alt is the cheaper 2-bay option shown only on request
+  const RECO_TBS = [4, 8, 16];
+  const NO_EXTRAS_NOTE = "메모리와 M.2 SSD는 추가하지 않습니다. 대신 UPS를 함께 둡니다.";
+  const RECO_OPTIONS = {
+    4: {
+      main: { model: "ds725", tb: 4, count: 2, raid: "shr" },
+      alt: null,
+      reasons: () => [
+        "지금 자료(1TB 미만)의 4배 이상을 담습니다.",
+        "디스크 1개가 고장 나도 자료를 잃지 않습니다.",
+        "이 용량은 DS925+로 만들어도 베이 2칸이 비어서, DS725+가 맞습니다.",
+        NO_EXTRAS_NOTE,
+        "UPS와 외장 HDD 백업을 함께 쓰려면 USB 포트가 2개인 DS925+가 편합니다. DS725+는 백업을 클라우드나 네트워크로 해야 합니다."
+      ]
+    },
+    8: {
+      main: { model: "ds925", tb: 4, count: 4, raid: "shr2" },
+      alt: { model: "ds725", tb: 8, count: 2, raid: "shr" },
+      reasons: (main, alt) => [
+        "지금 자료(1TB 미만)의 8배 이상을 담습니다.",
+        "디스크 2개가 동시에 고장 나도 법무 자료를 잃지 않습니다.",
+        `같은 8TB인 DS725+ 구성보다 ${won(main.total - alt.total)} 더 들지만, 고장 대비가 1개에서 2개로 늘어납니다.`,
+        NO_EXTRAS_NOTE
+      ]
+    },
+    16: {
+      main: { model: "ds925", tb: 8, count: 4, raid: "shr2" },
+      alt: { model: "ds725", tb: 16, count: 2, raid: "shr" },
+      reasons: () => [
+        "지금 자료(1TB 미만)의 16배 이상을 담습니다.",
+        "디스크 2개가 동시에 고장 나도 법무 자료를 잃지 않습니다.",
+        `본체 가격 차이 ${won(Math.abs(prices.ds925 - prices.ds725))}으로 베이 2개와 4코어 CPU를 얻습니다.`,
+        NO_EXTRAS_NOTE
+      ]
+    }
+  };
+  const altReasons = (alt, main) => [
+    `추천 구성보다 ${won(main.total - alt.total)} 저렴하고, 쓸 수 있는 용량은 ${alt.usable}TB로 같습니다.`,
+    "디스크 1개 고장까지만 버팁니다. 고장 난 디스크를 복구하는 동안 남은 디스크마저 고장 나면 자료를 잃습니다.",
+    "남는 베이가 없어서, 용량을 늘리려면 디스크를 더 큰 것으로 바꾸거나 확장 유닛 DX525를 연결해야 합니다."
+  ];
+  let recoTb = 4;
+  let recoAlt = false;
+
+  /* ================= Storage helpers ================= */
+  function readJSON(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (err) {
+      return fallback;
+    }
+  }
+  function writeJSON(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (err) {
+      /* storage unavailable: the page keeps working for this visit only */
+    }
+  }
+
+  let prices = { ...DEFAULT_PRICES, ...sanitizePrices(readJSON(PRICE_KEY, {})) };
+  function sanitizePrices(obj) {
+    const out = {};
+    Object.keys(DEFAULT_PRICES).forEach((k) => {
+      const v = Number(obj && obj[k]);
+      if (Number.isFinite(v) && v >= 0) out[k] = Math.round(v);
+    });
+    return out;
+  }
+
+  const won = (n) => n.toLocaleString("ko-KR") + "원";
+  const plusWon = (n) => "+" + won(n);
+
+  /* ================= Evaluation ================= */
+  function normalize(cfg) {
+    const bays = MODELS[cfg.model].bays;
+    const count = Math.max(1, Math.min(cfg.count, bays));
+    let raid = cfg.raid;
+    if (count === 1) raid = "basic";
+    else if (raid === "basic") raid = "shr";
+    else if (raid === "shr2" && count < 4) raid = "shr";
+    return { ...cfg, count, raid };
+  }
+
+  function evaluate(rawCfg) {
+    const cfg = normalize(rawCfg);
+    const parity = cfg.raid === "shr2" ? 2 : cfg.raid === "shr" ? 1 : 0;
+    const usable = (cfg.count - parity) * cfg.tb;
+    const lines = [
+      { label: MODELS[cfg.model].name + " 본체", amount: prices[cfg.model] },
+      { label: `HDD ${cfg.tb}TB × ${cfg.count}`, amount: prices["hdd" + cfg.tb] * cfg.count }
+    ];
+    let memGb = 4;
+    if (cfg.mem && cfg.mem !== "none") {
+      lines.push({ label: "메모리 " + ITEM[cfg.mem].label, amount: prices[cfg.mem] });
+      memGb += ITEM[cfg.mem].gb;
+    }
+    if (cfg.ssd && cfg.ssd !== "none") {
+      lines.push({ label: `SSD ${ITEM[cfg.ssd].label} × ${cfg.ssdQty}`, amount: prices[cfg.ssd] * cfg.ssdQty });
+    }
+    if (cfg.install && cfg.install !== "none") lines.push({ label: ITEM[cfg.install].label, amount: prices[cfg.install] });
+    if (cfg.care) lines.push({ label: ITEM.care.label, amount: prices.care });
+    if (cfg.ew) lines.push({ label: ITEM.ew.label, amount: prices.ew });
+    if (cfg.ups) lines.push({ label: "UPS " + ITEM.ups.label, amount: prices.ups });
+    const total = lines.reduce((sum, l) => sum + l.amount, 0);
+    return { cfg, parity, usable, lines, total, memGb };
+  }
+
+  function baseTitle(cfg) {
+    return `${MODELS[cfg.model].name} · ${cfg.tb}TB × ${cfg.count} · ${RAID_LABEL[cfg.raid]}`;
+  }
+  function fullTitle(ev) {
+    const c = ev.cfg;
+    const extras = [];
+    if (c.mem && c.mem !== "none") extras.push("메모리 +" + ITEM[c.mem].gb + "GB");
+    if (c.ssd && c.ssd !== "none") extras.push("SSD " + c.ssdQty + "개");
+    if (c.install && c.install !== "none") extras.push("방문 설치");
+    if (c.care) extras.push("케어");
+    if (c.ew) extras.push("보증 연장");
+    if (c.ups) extras.push("UPS");
+    return baseTitle(c) + (extras.length ? " + " + extras.join(", ") : "");
+  }
+
+  /* ================= Device drawing ================= */
+  const HEIGHT = 166;      // front panel height, mm
+  const MARGIN = 8;
+  const TRAY_GAP = 3;
+
+  function deviceSVG(bays, width, name) {
+    const strip = bays === 2 ? 14 : 22;
+    const trayW = (width - MARGIN * 2 - strip - TRAY_GAP * (bays - 1)) / bays;
+    const trayY = 10;
+    const trayH = HEIGHT - 20;
+    const id = "d" + bays;
+    const parts = [];
+
+    parts.push(
+      `<svg viewBox="0 0 ${width} ${HEIGHT}" role="img" aria-label="${name} 정면, 드라이브 베이 ${bays}개">`,
+      `<defs>`,
+      `<linearGradient id="${id}-ch" x1="0" y1="0" x2="0" y2="1">`,
+      `<stop offset="0" style="stop-color:var(--chassis-1)"/><stop offset="1" style="stop-color:var(--chassis-2)"/>`,
+      `</linearGradient>`,
+      `<pattern id="${id}-vent" width="6" height="3.2" patternUnits="userSpaceOnUse">`,
+      `<rect x="0.6" y="0.8" width="4.6" height="1.3" rx="0.65" style="fill:var(--vent)"/>`,
+      `</pattern>`,
+      `</defs>`,
+      `<rect x="0.5" y="0.5" width="${width - 1}" height="${HEIGHT - 1}" rx="7" style="fill:url(#${id}-ch);stroke:var(--chassis-edge)" stroke-width="1"/>`,
+      `<rect x="4" y="4" width="${width - 8}" height="${HEIGHT - 8}" rx="4.5" style="fill:var(--face)"/>`
+    );
+
+    for (let i = 0; i < bays; i++) {
+      const x = MARGIN + i * (trayW + TRAY_GAP);
+      const plateY = trayY + trayH * 0.34;
+      parts.push(
+        `<g class="bay" data-i="${i}">`,
+        `<rect x="${x}" y="${trayY}" width="${trayW}" height="${trayH}" rx="2.5" style="fill:var(--tray)"/>`,
+        `<rect x="${x + 4}" y="${trayY + 7}" width="${trayW - 8}" height="${trayH - 34}" rx="1.5" style="fill:url(#${id}-vent)"/>`,
+        `<rect x="${x + 4}" y="${trayY + trayH - 21}" width="${trayW - 8}" height="13" rx="2" style="fill:var(--latch)"/>`,
+        `<g class="plate"><rect x="${x + 3}" y="${plateY}" width="${trayW - 6}" height="26" rx="2"/>`,
+        `<text x="${x + trayW / 2}" y="${plateY + 13}"></text></g>`,
+        `<rect class="bay-hl" x="${x - 1}" y="${trayY - 1}" width="${trayW + 2}" height="${trayH + 2}" rx="3"/>`,
+        `</g>`
+      );
+    }
+
+    const cx = width - MARGIN - strip / 2;
+    parts.push(
+      `<circle cx="${cx}" cy="22" r="4.6" style="fill:none;stroke:var(--led-off)" stroke-width="1.1"/>`,
+      `<rect x="${cx - 0.55}" y="18.6" width="1.1" height="3.6" rx="0.5" style="fill:var(--led-off)"/>`,
+      `<circle class="led-stat" cx="${cx}" cy="40" r="1.5"/>`,
+      `<circle class="led-stat" cx="${cx}" cy="49" r="1.5"/>`
+    );
+    for (let i = 0; i < bays; i++) {
+      parts.push(`<circle class="led-disk" cx="${cx}" cy="${66 + i * 9}" r="1.5"/>`);
+    }
+    parts.push(`</svg>`);
+    return parts.join("");
+  }
+
+  document.querySelectorAll(".device").forEach((el) => {
+    el.innerHTML = deviceSVG(Number(el.dataset.bays), Number(el.dataset.width), el.dataset.name);
+  });
+
+  const fillTimers = new WeakMap();
+  function fillBays(deviceEl, cfg, animate) {
+    (fillTimers.get(deviceEl) || []).forEach(clearTimeout);
+    const timers = [];
+    deviceEl.querySelectorAll(".bay").forEach((bay, i) => {
+      bay.classList.remove("filled");
+      if (!cfg || i >= cfg.count) return;
+      bay.querySelector(".plate text").textContent = cfg.tb + "TB";
+      if (animate) timers.push(setTimeout(() => bay.classList.add("filled"), 140 + i * 110));
+      else bay.classList.add("filled");
+    });
+    fillTimers.set(deviceEl, timers);
+  }
+
+  /* ================= Scene 2: one picture per spec row ================= */
+  const S2_ITEMS = [
+    { view: "bays", title: "드라이브 베이", a: "2개", b: "4개", win: "b",
+      desc: "디스크를 넣는 칸입니다. 칸이 많을수록 고장 대비와 용량 확장에 여유가 생깁니다." },
+    { view: "exp", title: "확장 유닛", a: "최대 7개", b: "최대 9개", aSub: "2 + 5(DX525)", bSub: "4 + 5(DX525)", win: "b",
+      desc: "5베이 확장 유닛 DX525를 연결하면 칸을 5개 더 쓸 수 있습니다. 당장은 필요 없고, 나중에 용량이 모자랄 때 쓰는 선택지입니다." },
+    { view: "cpu", title: "CPU", a: "2코어 4스레드", b: "4코어 8스레드", aSub: "AMD Ryzen R1600", bSub: "AMD Ryzen V1500B", win: "b",
+      desc: "여러 작업이 겹칠 때 코어가 많은 쪽이 여유롭습니다. 4~5명 사무실에서는 둘 다 충분합니다." },
+    { view: "lan", title: "랜 포트", a: "2.5GbE + 1GbE", b: "2.5GbE × 2", win: "b",
+      desc: "2.5GbE는 1GbE보다 2.5배 빠릅니다. 다만 두 기기 모두 2.5GbE 포트가 있어서, 보통처럼 랜선을 하나만 꽂으면 속도는 같습니다. 사무실 공유기가 1GbE라면 둘 다 1GbE 속도로 맞춰집니다." },
+    { view: "usb", title: "USB 포트", a: "1개", b: "2개", aSub: "+ 확장용 USB-C", bSub: "+ 확장용 USB-C", win: "b",
+      desc: "UPS와 백업용 외장 HDD는 둘 다 USB로 연결합니다. DS725+는 일반 USB 포트가 1개라 하나만 꽂을 수 있고, DS925+는 둘 다 바로 연결됩니다. 뒷면 USB-C는 확장 유닛 DX525 전용입니다." },
+    { view: "mem", title: "메모리", a: "4GB", b: "4GB", aSub: "최대 32GB", bSub: "최대 32GB", same: true,
+      desc: "두 기기가 같습니다. DDR4 ECC 메모리이고, 이번 용도에는 기본 4GB로 충분합니다." },
+    { view: "m2", title: "M.2 NVMe 슬롯", a: "2개", b: "2개", same: true,
+      desc: "작은 SSD를 추가로 꽂는 칸입니다. 자주 여는 파일을 SSD에 올려 두고 메모리처럼 빠르게 꺼내 쓰는 캐시로 씁니다. 두 기기 모두 2칸씩 있습니다." },
+    { view: "front", title: "본체 가격", priceKeys: ["ds725", "ds925"],
+      desc: () => `차이는 ${won(Math.abs(prices.ds925 - prices.ds725))}입니다. 이 용도에서 성능 차이는 체감하기 어렵고, 결정적인 차이는 베이 수입니다.` }
+  ];
+
+  function cpuSVG(W, cores) {
+    const size = Math.min(96, W - 18);
+    const x0 = (W - size) / 2, y0 = (HEIGHT - size) / 2;
+    const pins = [];
+    for (let k = 0; k < 9; k++) {
+      const p = 10 + k * ((size - 20) / 8);
+      pins.push(`M${x0 + p} ${y0 - 6} V${y0}`, `M${x0 + p} ${y0 + size} V${y0 + size + 6}`,
+        `M${x0 - 6} ${y0 + p} H${x0}`, `M${x0 + size} ${y0 + p} H${x0 + size + 6}`);
+    }
+    const cell = 26, gap = 6, rowsN = cores / 2;
+    const gw = cell * 2 + gap, gh = rowsN * cell + (rowsN - 1) * gap;
+    const gx = x0 + size / 2 - gw / 2, gy = y0 + size / 2 - gh / 2;
+    const coreRects = [];
+    for (let c = 0; c < cores; c++) {
+      const cx = gx + (c % 2) * (cell + gap), cy = gy + Math.floor(c / 2) * (cell + gap);
+      coreRects.push(`<rect x="${cx}" y="${cy}" width="${cell}" height="${cell}" rx="2" style="fill:var(--data)"/>`,
+        `<rect x="${cx + 7}" y="${cy + 6}" width="4" height="14" rx="1" style="fill:var(--plate-fg)"/>`,
+        `<rect x="${cx + 15}" y="${cy + 6}" width="4" height="14" rx="1" style="fill:var(--plate-fg)"/>`);
+    }
+    return `<svg viewBox="0 0 ${W} ${HEIGHT}" role="img" aria-label="CPU ${cores}코어 ${cores * 2}스레드">
+      <path d="${pins.join(" ")}" style="stroke:var(--fg-muted)" stroke-width="1.2" fill="none"/>
+      <rect x="${x0}" y="${y0}" width="${size}" height="${size}" rx="6" style="fill:var(--chassis-1);stroke:var(--chassis-edge)" stroke-width="1"/>
+      <rect x="${x0 + 10}" y="${y0 + 10}" width="${size - 20}" height="${size - 20}" rx="3" style="fill:var(--face)"/>
+      ${coreRects.join("")}
+    </svg>`;
+  }
+
+  function lanSVG(W, ports) {
+    const fanXs = W > 150 ? [W * 0.28, W * 0.72] : [W / 2];
+    const r = 26, fy = 42;
+    const fans = fanXs.map((cx) =>
+      `<circle cx="${cx}" cy="${fy}" r="${r}" style="fill:var(--face);stroke:var(--chassis-edge)" stroke-width="1"/>` +
+      `<circle cx="${cx}" cy="${fy}" r="${r * 0.72}" style="fill:none;stroke:var(--vent)" stroke-width="2"/>` +
+      `<circle cx="${cx}" cy="${fy}" r="${r * 0.44}" style="fill:none;stroke:var(--vent)" stroke-width="2"/>` +
+      `<path d="M${cx - r} ${fy} H${cx + r} M${cx} ${fy - r} V${fy + r}" style="stroke:var(--vent)" stroke-width="1.6"/>` +
+      `<circle cx="${cx}" cy="${fy}" r="${r * 0.18}" style="fill:var(--latch)"/>`).join("");
+    const pw = 16, ph = 13, pg = 10;
+    const total = ports.length * pw + (ports.length - 1) * pg;
+    const px0 = (W - total) / 2, py = 86;
+    const laneTop = py + ph + 3, laneBottom = HEIGHT - 10;
+    const jacks = ports.map((kind, i) => {
+      const x = px0 + i * (pw + pg);
+      const fast = kind === "2.5G";
+      const fill = fast ? "var(--data)" : "var(--parity)";
+      const dur = fast ? 0.45 : 1.125; // 2.5x slower for 1GbE
+      return `<rect x="${x}" y="${py}" width="${pw}" height="${ph}" rx="1.5" style="fill:${fill}"/>` +
+        `<rect x="${x + pw / 2 - 3}" y="${py + ph - 3.5}" width="6" height="3.5" style="fill:var(--face)"/>` +
+        `<path class="flow" d="M${x + 5} ${laneBottom} V${laneTop}" style="stroke:var(--data);--dur:${dur}s"/>` +
+        `<path class="flow" d="M${x + 11} ${laneTop} V${laneBottom}" style="stroke:var(--led-on);--dur:${dur}s"/>`;
+    }).join("");
+    return `<svg viewBox="0 0 ${W} ${HEIGHT}" role="img" aria-label="뒷면, 랜 포트 ${ports.join(", ")}">
+      <rect x="0.5" y="0.5" width="${W - 1}" height="${HEIGHT - 1}" rx="7" style="fill:var(--chassis-2);stroke:var(--chassis-edge)" stroke-width="1"/>
+      ${fans}${jacks}
+      <rect x="10" y="146" width="14" height="10" rx="1.5" style="fill:var(--latch)"/>
+    </svg>`;
+  }
+
+  // USB-A ports feed the UPS and the backup drive; the USB-C expansion port stays unused
+  function usbSVG(W, usbA) {
+    const portY = 30;
+    const aW = 24, cW = 15, gap = 10;
+    const total = usbA * aW + (usbA - 1) * gap + gap + cW;
+    const x0 = (W - total) / 2;
+    const aX = Array.from({ length: usbA }, (_, i) => x0 + i * (aW + gap));
+    const cX = x0 + usbA * (aW + gap);
+    const upsX = W * 0.3, hddX = W * 0.7, devY = 104;
+    const ports = aX.map((x) =>
+      `<rect x="${x}" y="${portY}" width="${aW}" height="11" rx="1.5" style="fill:var(--data)"/>` +
+      `<rect x="${x + 4}" y="${portY + 3}" width="${aW - 8}" height="4" rx="1" style="fill:var(--face)"/>`).join("") +
+      `<rect x="${cX}" y="${portY + 2.5}" width="${cW}" height="6" rx="3" style="fill:var(--parity)"/>`;
+    const toUps = `<path class="route" d="M${aX[0] + aW / 2} ${portY + 11} V${portY + 40} H${upsX} V${devY}"/>`;
+    const toHdd = usbA > 1
+      ? `<path class="route" d="M${aX[1] + aW / 2} ${portY + 11} V${portY + 52} H${hddX} V${devY}"/>`
+      : `<path class="unplugged" d="M${hddX} ${devY} V${portY + 58}"/>` +
+        `<path class="x-mark" d="M${hddX - 6} ${portY + 46} l12 12 M${hddX + 6} ${portY + 46} l-12 12"/>`;
+    return `<svg viewBox="0 0 ${W} ${HEIGHT}" role="img" aria-label="일반 USB 포트 ${usbA}개: ${usbA > 1 ? "UPS와 외장 HDD 모두 연결" : "UPS만 연결, 외장 HDD 연결 불가"}">
+      <rect x="4" y="12" width="${W - 8}" height="48" rx="6" style="fill:var(--chassis-2);stroke:var(--chassis-edge)"/>
+      ${ports}${toUps}${toHdd}
+      <rect class="dev-ico" x="${upsX - 12}" y="${devY}" width="24" height="40" rx="3"/>
+      <rect x="${upsX - 7}" y="${devY + 6}" width="14" height="7" rx="1" style="fill:var(--led-on)"/>
+      <rect class="dev-ico${usbA > 1 ? "" : " off"}" x="${hddX - 12}" y="${devY + 4}" width="24" height="36" rx="3"/>
+      <circle cx="${hddX}" cy="${devY + 32}" r="1.6" style="fill:var(--led-on)"/>
+    </svg>`;
+  }
+
+  function slotPanel(W, inner, label) {
+    return `<svg viewBox="0 0 ${W} ${HEIGHT}" role="img" aria-label="${label}">
+      <rect x="4" y="24" width="${W - 8}" height="118" rx="8" style="fill:var(--board)"/>${inner}</svg>`;
+  }
+  function memSVG(W) {
+    const x0 = 12, w = W - 24;
+    const chipCount = Math.max(2, Math.floor((w - 12) / 26));
+    const chipW = (w - 12 - (chipCount - 1) * 6) / chipCount;
+    const chips = Array.from({ length: chipCount }, (_, k) =>
+      `<rect x="${x0 + 8 + k * (chipW + 6)}" y="49" width="${chipW}" height="11" rx="1" style="fill:var(--chip)"/>`).join("");
+    return slotPanel(W,
+      `<rect x="${x0}" y="53" width="${w}" height="8" rx="1.5" style="fill:var(--slot)"/>` +
+      `<rect x="${x0 + 2}" y="44" width="${w - 4}" height="22" rx="2" style="fill:var(--module)"/>${chips}` +
+      `<rect x="${x0}" y="101" width="${w}" height="8" rx="1.5" style="fill:var(--slot)"/>` +
+      `<rect class="ghost" x="${x0 + 2}" y="92" width="${w - 4}" height="22" rx="2"/>`,
+      "메모리 슬롯 2개, 4GB 1개 장착");
+  }
+  function m2SVG(W) {
+    const stick = (y) =>
+      `<rect x="12" y="${y}" width="8" height="16" rx="1.5" style="fill:var(--slot)"/>` +
+      `<rect class="ghost" x="20" y="${y}" width="${W - 50}" height="16" rx="2"/>` +
+      `<circle cx="${W - 20}" cy="${y + 8}" r="3.2" style="fill:var(--slot)"/>`;
+    return slotPanel(W, stick(56) + stick(96), "M.2 NVMe 슬롯 2개, 비어 있음");
+  }
+
+  function buildViz(el, model) {
+    const bays = MODELS[model].bays;
+    const W = bays === 2 ? 106 : 199;
+    const ports = model === "ds725" ? ["2.5G", "1G"] : ["2.5G", "2.5G"];
+    el.style.setProperty("--w", W);
+    el.dataset.view = "front";
+    el.innerHTML =
+      `<div class="dx-layer" aria-hidden="true">${deviceSVG(5, 236, "DX525")}</div>` +
+      `<div class="view view-front"><div class="device">${deviceSVG(bays, W, MODELS[model].name)}</div></div>` +
+      `<div class="view view-cpu">${cpuSVG(W, bays === 2 ? 2 : 4)}</div>` +
+      `<div class="view view-lan">${lanSVG(W, ports)}</div>` +
+      `<div class="view view-mem">${memSVG(W)}</div>` +
+      `<div class="view view-m2">${m2SVG(W)}</div>` +
+      `<div class="view view-usb">${usbSVG(W, bays === 2 ? 1 : 2)}</div>`;
+    el.querySelectorAll(".view-front .bay .plate text").forEach((t, i) => { t.textContent = String(i + 1); });
+  }
+  buildViz(document.getElementById("viz-a"), "ds725");
+  buildViz(document.getElementById("viz-b"), "ds925");
+
+  function specCardHTML(item, i) {
+    const a = item.priceKeys ? won(prices[item.priceKeys[0]]) : item.a;
+    const b = item.priceKeys ? won(prices[item.priceKeys[1]]) : item.b;
+    const desc = typeof item.desc === "function" ? item.desc() : item.desc;
+    const sub = (s) => (s ? `<span class="sub">${s}</span>` : "");
+    return `<span class="spec-idx">${i + 1} / ${S2_ITEMS.length}</span>` +
+      `<h3 class="spec-title">${item.title}</h3>` +
+      `<div class="spec-vals${item.same ? " same" : ""}">` +
+      `<span class="a${item.win === "a" ? " win" : ""}">${a}${sub(item.aSub)}</span>` +
+      `<span class="vs">${item.same ? "같음" : "vs"}</span>` +
+      `<span class="b${item.win === "b" ? " win" : ""}">${b}${sub(item.bSub)}</span></div>` +
+      `<p class="spec-desc">${desc}</p>`;
+  }
+
+  let s2Index = 0;
+  function setS2(i) {
+    s2Index = i;
+    const item = S2_ITEMS[i];
+    document.getElementById("viz-a").dataset.view = item.view;
+    document.getElementById("viz-b").dataset.view = item.view;
+    const ticks = S2_ITEMS.map((_, k) => `<i${k === i ? ' class="on"' : ""}></i>`).join("");
+    document.getElementById("spec-stage").innerHTML =
+      `<div class="spec-card enter">${specCardHTML(item, i)}<div class="spec-ticks" aria-hidden="true">${ticks}</div></div>`;
+  }
+
+  // Without scroll animation every item is listed at once
+  function renderSpecList() {
+    document.getElementById("spec-stage").innerHTML =
+      `<div class="spec-list">${S2_ITEMS.map((item, i) => `<div class="spec-card">${specCardHTML(item, i)}</div>`).join("")}</div>`;
+  }
+  function renderS2() {
+    if (animated) setS2(s2Index);
+    else renderSpecList();
+  }
+
+  /* ================= Scene 3: capacity ================= */
+  const S3_STEPS = [
+    { total: 4, a: { model: "ds725", tb: 4, count: 2, raid: "shr" },
+      b: { model: "ds925", tb: 4, count: 2, raid: "shr", note: "2칸이 비어 있음 · 살 이유 없음" } },
+    { total: 8, a: { model: "ds725", tb: 8, count: 2, raid: "shr" }, b: { model: "ds925", tb: 4, count: 4, raid: "shr2" } },
+    { total: 16, a: { model: "ds725", tb: 16, count: 2, raid: "shr" }, b: { model: "ds925", tb: 8, count: 4, raid: "shr2" } },
+    { total: 20, a: { model: "ds725", tb: 20, count: 2, raid: "shr" },
+      b: null, bWhy: "10TB 디스크 옵션 없음 · 가까운 구성 24TB" },
+    { total: 24, a: null, aWhy: "디스크 2개로는 최대 20TB",
+      b: { model: "ds925", tb: 12, count: 4, raid: "shr2", note: "지금은 불필요" } },
+    { total: 32, a: null, aWhy: "디스크 2개로는 최대 20TB",
+      b: { model: "ds925", tb: 16, count: 4, raid: "shr2", note: "지금은 불필요" } },
+    { total: 40, a: null, aWhy: "디스크 2개로는 최대 20TB",
+      b: { model: "ds925", tb: 20, count: 4, raid: "shr2", note: "지금은 불필요" } }
+  ];
+  function capCaption(el, cfg, why) {
+    if (!cfg) {
+      el.className = "cap-dev na";
+      el.innerHTML = `<span class="t">구성 불가</span><span class="m">${why}</span><span class="p">&nbsp;</span>`;
+      return;
+    }
+    const ev = evaluate(cfg);
+    el.className = cfg.note ? "cap-dev na" : "cap-dev";
+    el.innerHTML = `<span class="t">${cfg.tb}TB × ${cfg.count} · ${RAID_LABEL[cfg.raid]}</span>` +
+      `<span class="m">${cfg.note || `고장 대비 디스크 ${ev.parity}개`}</span><span class="p">${won(ev.total)}</span>`;
+  }
+  let s3Current = -1;
+  function setS3(i, animate) {
+    s3Current = i;
+    const st = S3_STEPS[i];
+    document.getElementById("s3-big").textContent = st.total + "TB";
+    fillBays(document.getElementById("s3-a"), st.a, animate);
+    fillBays(document.getElementById("s3-b"), st.b, animate);
+    capCaption(document.getElementById("s3-a-cap"), st.a, st.aWhy);
+    capCaption(document.getElementById("s3-b-cap"), st.b, st.bWhy);
+    document.getElementById("s3-a").closest(".cap-unit").classList.toggle("off", !st.a);
+    document.getElementById("s3-b").closest(".cap-unit").classList.toggle("off", !st.b);
+    setActive("#s3-dots > button", i);
+    setActive("#s3-caps > .cap", i);
+  }
+
+  function setActive(selector, i) {
+    document.querySelectorAll(selector).forEach((el, k) => el.classList.toggle("on", k === i));
+  }
+
+  /* ================= Scene 4: SHR ================= */
+  const COL_W = 30, COL_GAP = 8, BLK_H = 18, BLK_GAP = 5, TOP = 16;
+  const MIRROR = [
+    [["d", "A"], ["c", "A"]],
+    [["d", "B"], ["c", "B"]],
+    [["d", "C"], ["c", "C"]],
+    [["d", "D"], ["c", "D"]]
+  ];
+  const SHR2 = [
+    [["d", "A1"], ["d", "A2"], ["p", "P"], ["p", "Q"]],
+    [["p", "Q"], ["d", "B1"], ["d", "B2"], ["p", "P"]],
+    [["p", "P"], ["p", "Q"], ["d", "C1"], ["d", "C2"]],
+    [["d", "D2"], ["p", "P"], ["p", "Q"], ["d", "D1"]]
+  ];
+  function raidSVG(layout) {
+    const n = layout[0].length;
+    const width = n * COL_W + (n - 1) * COL_GAP + 2;
+    const height = TOP + layout.length * (BLK_H + BLK_GAP) + 4;
+    const parts = [`<svg viewBox="0 0 ${width} ${height}" style="width:calc(var(--k) * ${width})" role="img" aria-label="디스크 ${n}개 배치도">`];
+    for (let c = 0; c < n; c++) {
+      const x = 1 + c * (COL_W + COL_GAP);
+      parts.push(`<g class="col" data-i="${c}">`,
+        `<text class="col-t" x="${x + COL_W / 2}" y="8">디스크 ${c + 1}</text>`,
+        `<rect class="col-bg" x="${x}" y="${TOP - 3}" width="${COL_W}" height="${height - TOP}" rx="3"/>`);
+      layout.forEach((row, r) => {
+        const [type, label] = row[c];
+        const y = TOP + 1 + r * (BLK_H + BLK_GAP);
+        parts.push(`<rect class="blk ${type}" data-r="${r}" data-c="${c}" x="${x + 3}" y="${y}" width="${COL_W - 6}" height="${BLK_H}" rx="2"/>`,
+          `<text class="blk-t ${type}" data-r="${r}" data-c="${c}" x="${x + COL_W / 2}" y="${y + BLK_H / 2}">${label}</text>`);
+      });
+      parts.push(`<g class="x"><line x1="${x + 4}" y1="${TOP + 4}" x2="${x + COL_W - 4}" y2="${height - 8}"/>`,
+        `<line x1="${x + COL_W - 4}" y1="${TOP + 4}" x2="${x + 4}" y2="${height - 8}"/></g>`, `</g>`);
+    }
+    parts.push(`<g class="links"></g>`, `</svg>`);
+    return parts.join("");
+  }
+  document.getElementById("raid-a").innerHTML = raidSVG(MIRROR);
+  document.getElementById("raid-b").innerHTML = raidSVG(SHR2);
+
+  // rebuild: replace the failed disks and refill them row by row from the surviving blocks
+  const S4_STEPS = [
+    { a: { fail: [], st: ["info", "정상"] }, b: { fail: [], st: ["info", "정상"] } },
+    { a: { fail: [1], rebuild: true }, b: { fail: [1], rebuild: true } },
+    { a: { fail: [0, 1], st: ["bad", "데이터 손실"] }, b: { fail: [1, 3], rebuild: true } },
+    { a: { fail: [], st: ["info", "8TB × 2 → 8TB"] }, b: { fail: [], st: ["info", "8TB × 4 → 16TB"] } }
+  ];
+  const RAID_PANELS = { a: { id: "raid-a", layout: MIRROR }, b: { id: "raid-b", layout: SHR2 } };
+  // Rebuild phases as fractions of a failure step's scroll range
+  const FAIL_END = 0.14, SWAP_END = 0.22, ROWS_END = 0.9, ROW_FILL_AT = 0.6;
+  const rebuildShown = { a: "", b: "" };
+
+  function panelParts(key) {
+    const root = document.getElementById(RAID_PANELS[key].id);
+    return { root, cols: root.querySelectorAll(".col"), links: root.querySelector(".links") };
+  }
+  function setRaidStatus(key, kind, text) {
+    const el = document.getElementById(RAID_PANELS[key].id + "-st");
+    el.className = "status " + kind;
+    el.textContent = text;
+  }
+  function clearRaid(p) {
+    p.cols.forEach((c) => c.classList.remove("failed", "new"));
+    p.root.querySelectorAll(".rebuilt, .src").forEach((el) => el.classList.remove("rebuilt", "src"));
+    p.links.innerHTML = "";
+  }
+  const blockCentre = (r, c) => ({
+    x: 1 + c * (COL_W + COL_GAP) + COL_W / 2,
+    y: TOP + 1 + r * (BLK_H + BLK_GAP) + BLK_H / 2
+  });
+  function drawLinks(p, r, sources, targets) {
+    const paths = [];
+    targets.forEach((tc) => {
+      const t = blockCentre(r, tc);
+      sources.forEach((sc) => {
+        const s = blockCentre(r, sc);
+        const lift = 6 + Math.abs(t.x - s.x) * 0.18;
+        paths.push(`<path d="M${s.x} ${s.y} Q${(s.x + t.x) / 2} ${s.y - lift} ${t.x} ${t.y}"/>`);
+      });
+    });
+    p.links.innerHTML = paths.join("");
+  }
+
+  // Draw the rebuild at a given point (0..1) of the step's scroll range
+  function renderRebuild(key, fail, progress) {
+    const layout = RAID_PANELS[key].layout;
+    const rows = layout.length;
+    const rowsProg = Math.max(0, Math.min(1, (progress - SWAP_END) / (ROWS_END - SWAP_END)));
+    const rowPos = rowsProg * rows;
+    const row = Math.min(rows - 1, Math.floor(rowPos));
+    const rowFilled = rowPos - row >= ROW_FILL_AT;
+    const phase = progress < FAIL_END ? "fail" : progress < SWAP_END ? "swap" : rowsProg >= 1 ? "done" : "rows";
+    const shownKey = `${phase}:${row}:${rowFilled}`;
+    if (rebuildShown[key] === shownKey) return;
+    rebuildShown[key] = shownKey;
+
+    const p = panelParts(key);
+    const keep = layout[0].map((_, c) => c).filter((c) => !fail.includes(c));
+    const fillRow = (r) => fail.forEach((c) =>
+      p.root.querySelectorAll(`[data-r="${r}"][data-c="${c}"]`).forEach((el) => el.classList.add("rebuilt")));
+    clearRaid(p);
+
+    if (phase === "fail") {
+      p.cols.forEach((c, k) => c.classList.toggle("failed", fail.includes(k)));
+      setRaidStatus(key, "warn", `디스크 ${fail.length}개 고장`);
+      return;
+    }
+    p.cols.forEach((c, k) => c.classList.toggle("new", fail.includes(k)));
+    if (phase === "swap") {
+      setRaidStatus(key, "info", "새 디스크로 교체");
+      return;
+    }
+    if (phase === "done") {
+      for (let r = 0; r < rows; r++) fillRow(r);
+      setRaidStatus(key, "ok", "복구 완료");
+      return;
+    }
+    for (let r = 0; r < row; r++) fillRow(r);
+    keep.forEach((c) => p.root.querySelector(`.blk[data-r="${row}"][data-c="${c}"]`).classList.add("src"));
+    drawLinks(p, row, keep, fail);
+    if (rowFilled) fillRow(row);
+    setRaidStatus(key, "info", `복구 중 ${row + 1}/${rows}`);
+  }
+
+  function setS4(i) {
+    const st = S4_STEPS[i];
+    ["a", "b"].forEach((key) => {
+      rebuildShown[key] = "";
+      const p = panelParts(key);
+      clearRaid(p);
+      const cfg = st[key];
+      if (cfg.rebuild && animated) {
+        renderRebuild(key, cfg.fail, 0);
+        return;
+      }
+      p.cols.forEach((c, k) => c.classList.toggle("failed", cfg.fail.includes(k)));
+      const [kind, text] = cfg.st || ["ok", "데이터 유지"];
+      setRaidStatus(key, kind, text);
+    });
+    setActive("#s4-dots > button", i);
+    setActive("#s4-caps > .cap", i);
+  }
+  function progressS4(i, local) {
+    const st = S4_STEPS[i];
+    ["a", "b"].forEach((key) => {
+      if (st[key].rebuild) renderRebuild(key, st[key].fail, local);
+    });
+  }
+
+  /* ================= Scene 5: board ================= */
+  function boardSVG() {
+    const chips = (x0, y0) => [0, 1, 2, 3].map((k) =>
+      `<rect x="${x0 + 14 + k * 36}" y="${y0 + 5}" width="26" height="12" rx="1" style="fill:var(--chip)"/>`).join("");
+    return `<svg class="board" viewBox="0 0 340 210" role="img" aria-label="메모리 슬롯 2개와 M.2 슬롯 2개 개념도">
+      <rect x="6" y="6" width="328" height="198" rx="12" style="fill:var(--board)"/>
+      <path d="M20 112 H320 M200 20 V104" style="stroke:var(--board-line)" stroke-width="1" fill="none"/>
+      <text class="brd-t" x="22" y="26">메모리 슬롯 · DDR4 ECC SO-DIMM</text>
+      <rect x="22" y="40" width="168" height="8" rx="1.5" style="fill:var(--slot)"/>
+      <rect x="24" y="31" width="164" height="22" rx="2" style="fill:var(--module)"/>${chips(24, 31)}
+      <text class="brd-t" x="106" y="66" text-anchor="middle">기본 4GB 장착</text>
+      <rect x="22" y="80" width="168" height="8" rx="1.5" style="fill:var(--slot)"/>
+      <rect class="ghost" x="24" y="71" width="164" height="22" rx="2"/>
+      <text class="brd-t dim" x="106" y="104" text-anchor="middle">빈 슬롯 · 추가 가능</text>
+      <rect x="226" y="34" width="72" height="56" rx="4" style="fill:var(--slot)"/>
+      <text class="brd-t" x="262" y="66" text-anchor="middle">CPU</text>
+      <text class="brd-t" x="22" y="130">M.2 2280 NVMe 슬롯 × 2</text>
+      <rect x="22" y="142" width="10" height="16" rx="1.5" style="fill:var(--slot)"/>
+      <rect class="ghost" x="32" y="142" width="160" height="16" rx="2"/>
+      <circle cx="200" cy="150" r="3.2" style="fill:var(--slot)"/>
+      <rect x="22" y="170" width="10" height="16" rx="1.5" style="fill:var(--slot)"/>
+      <rect class="ghost" x="32" y="170" width="160" height="16" rx="2"/>
+      <circle cx="200" cy="178" r="3.2" style="fill:var(--slot)"/>
+      <text class="brd-t dim" x="212" y="168">비어 있음</text>
+      <rect class="hl-ring hl-mem" x="14" y="14" width="184" height="96" rx="8"/>
+      <rect class="hl-ring hl-m2" x="14" y="118" width="244" height="78" rx="8"/>
+    </svg>`;
+  }
+  document.getElementById("board").innerHTML = boardSVG();
+  function setS5(i) {
+    const board = document.querySelector("#board .board");
+    board.dataset.focus = ["mem", "m2"][i];
+    setActive("#s5 .opt-card", i);
+  }
+
+  /* ================= Prices into the page ================= */
+  /* ================= Power outage ================= */
+  // Phases: settle | flicker | outage | surge | damaged | with UPS | lights up.
+  // The first and last phases are long so fast scrolling still pauses on them.
+  const OUTAGE_WEIGHTS = [22, 14, 11, 11, 18, 22, 20];
+  const OUTAGE_ENDS = (() => {
+    const total = OUTAGE_WEIGHTS.reduce((a, b) => a + b, 0);
+    let acc = 0;
+    return OUTAGE_WEIGHTS.map((w) => (acc += w) / total);
+  })();
+  const [FLICKER_START, OUTAGE_START, SURGE_START, DAMAGE_START, UPS_START, BRIGHT_START] = OUTAGE_ENDS;
+  const ENTER_END = FLICKER_START * 0.45;                       // darken in the first part of the settle phase, then hold
+  const UPS_SHUTDOWN = UPS_START + (BRIGHT_START - UPS_START) * 0.62;
+  const BRIGHT_PORTION = 0.5;                                    // light up in the first half of the last phase, then hold
+  const UPS_BARS = 4, UPS_BARS_USED = 2; // battery drains from 4 to 2 bars before the NAS shuts down
+  const FLASH_LENGTH = 0.05;
+  const ROOM_DARKNESS = 0.94;
+  const FLICKER_DIM = 0.25; // the lamp dims rather than going fully dark, to keep the contrast gentle
+  const phaseMid = (i) => ((i === 0 ? 0 : OUTAGE_ENDS[i - 1]) + OUTAGE_ENDS[i]) / 2;
+  const OUTAGE_CHECKPOINTS = [
+    (ENTER_END + FLICKER_START) / 2, phaseMid(1), phaseMid(2), phaseMid(3), phaseMid(4),
+    UPS_START + (UPS_SHUTDOWN - UPS_START) * 0.6, (UPS_SHUTDOWN + BRIGHT_START) / 2, 0.97
+  ];
+  let outagePlate = "";
+
+  // Same scroll position always gives the same on/off pattern, so scrolling back replays it
+  function flickerDark(p) {
+    const k = Math.floor(p * 160);
+    return (k * 7919) % 11 < 4;
+  }
+  function renderOutage(p) {
+    const enter = p < BRIGHT_START
+      ? Math.min(1, p / ENTER_END)
+      : Math.max(0, 1 - (p - BRIGHT_START) / ((1 - BRIGHT_START) * BRIGHT_PORTION));
+    let light = 1, power = true, sparking = false, damaged = false, zap = 0, ups = false;
+    if (p >= BRIGHT_START) {
+      ups = true; light = 0; // power is back: the room lights up and the NAS runs again
+    } else if (p >= UPS_START) {
+      ups = true; light = 0; power = p < UPS_SHUTDOWN;
+    } else if (p >= DAMAGE_START) {
+      damaged = true; power = false;
+    } else if (p >= SURGE_START) {
+      sparking = true; power = false;
+      zap = Math.max(0, 1 - (p - SURGE_START) / FLASH_LENGTH) * 0.7;
+    } else if (p >= OUTAGE_START) {
+      light = 0; power = false;
+    } else if (p >= FLICKER_START) {
+      const dim = flickerDark(p);
+      light = dim ? FLICKER_DIM : 1; power = !dim;
+    }
+    document.getElementById("outage-black").style.opacity = enter * ROOM_DARKNESS;
+    document.getElementById("outage-stage").classList.toggle("dark", enter > 0.5);
+    const room = document.getElementById("outage-room");
+    room.style.setProperty("--enter", enter.toFixed(3));
+    room.style.setProperty("--light", light);
+    document.getElementById("outage-zap").style.opacity = zap;
+    const dev = document.getElementById("outage-dev");
+    dev.classList.toggle("powered-off", !power);
+    dev.classList.toggle("sparking", sparking);
+    dev.classList.toggle("damaged", damaged);
+    dev.classList.toggle("ups-mode", ups);
+    const onBatteryPhase = ups && p < BRIGHT_START;
+    dev.classList.toggle("on-battery", onBatteryPhase && power);
+    const drained = onBatteryPhase ? Math.min(UPS_BARS_USED, Math.floor((p - UPS_START) / (UPS_SHUTDOWN - UPS_START) * (UPS_BARS_USED + 1))) : 0;
+    dev.querySelectorAll(".ups-bars rect").forEach((bar, i) => bar.classList.toggle("empty", i >= UPS_BARS - drained));
+    const status = document.getElementById("outage-status");
+    status.classList.toggle("show", onBatteryPhase);
+    if (onBatteryPhase) {
+      status.className = "status outage-status show " + (power ? "warn" : "ok");
+      status.textContent = power ? "UPS 배터리로 작동 중" : "안전하게 종료됨";
+    }
+    const plateText = damaged ? "손상" : "작동중";
+    if (plateText !== outagePlate) {
+      outagePlate = plateText;
+      dev.querySelectorAll(".plate text").forEach((t) => { t.textContent = plateText; });
+    }
+  }
+  function setOutageStep(i) {
+    setActive("#outage-caps > .cap", i);
+  }
+
+  /* ================= Access diagram ================= */
+  const pcIcon = (x, y) => `<g class="ico"><rect x="${x - 23}" y="${y}" width="46" height="32" rx="3"/><path d="M${x} ${y + 32} V${y + 40} M${x - 12} ${y + 40} H${x + 12}"/></g>`;
+  const laptopIcon = (x, y) => `<g class="ico"><rect x="${x - 32}" y="${y}" width="64" height="40" rx="3"/><path d="M${x - 42} ${y + 46} H${x + 42}"/></g>`;
+  const phoneIcon = (x, y) => `<g class="ico"><rect x="${x - 13}" y="${y}" width="26" height="46" rx="5"/><path d="M${x - 4} ${y + 40} H${x + 4}"/></g>`;
+  const nasIcon = (x, y) => `<g class="nas-ico"><rect class="body" x="${x - 44}" y="${y}" width="88" height="72" rx="7"/>` +
+    [0, 1, 2, 3].map((i) => `<rect class="bayi" x="${x - 38 + i * 17}" y="${y + 8}" width="14" height="56" rx="2"/>`).join("") +
+    `<circle class="led-disk" cx="${x + 36}" cy="${y + 14}" r="2"/></g>`;
+  const cloudIcon = (x, y) => `<g class="cloud"><circle cx="${x - 14}" cy="${y}" r="12"/><circle cx="${x + 2}" cy="${y - 8}" r="16"/>` +
+    `<circle cx="${x + 18}" cy="${y}" r="12"/><rect x="${x - 26}" y="${y}" width="56" height="12" rx="6"/></g>`;
+  const lockIcon = (x, y) => `<g class="lock"><rect x="${x - 8}" y="${y - 3}" width="16" height="12" rx="2"/><path d="M${x - 5} ${y - 3} v-4 a5 5 0 0 1 10 0 v4"/></g>`;
+
+  // Wide screens get a left-to-right diagram, phones a top-to-bottom one
+  function accessSVG() {
+    const label = "사무실 안 PC는 LAN으로, 사무실 밖 기기는 VPN 또는 QuickConnect로 NAS에 연결";
+    const wide = `<svg class="net-h" viewBox="0 0 820 270" role="img" aria-label="${label}">
+      <rect class="zone" x="12" y="34" width="232" height="222" rx="14"/>
+      <rect class="zone" x="576" y="34" width="232" height="222" rx="14"/>
+      <text class="zlbl" x="30" y="62">사무실 안</text>
+      <text class="zlbl" x="594" y="62">사무실 밖</text>
+      ${pcIcon(70, 96)}${pcIcon(128, 96)}${pcIcon(186, 96)}
+      <g class="p-lan">
+        <path class="lan" d="M70 136 V200 M128 136 V200 M186 136 V200 M70 200 H410 V180"/>
+        <path class="route" d="M410 180 V200 H70"/>
+        <text class="lbl s" x="128" y="232">LAN · 네트워크 드라이브</text>
+      </g>
+      ${nasIcon(410, 108)}
+      <text class="lbl" x="410" y="98">NAS</text>
+      <g class="p-vpn">
+        <path class="tube" d="M454 160 H740 V150 M640 160 V150"/>
+        <path class="route" d="M454 160 H740 V150 M640 160 V150"/>
+        ${lockIcon(515, 160)}
+        <text class="lbl" x="515" y="196">VPN · Tailscale</text>
+      </g>
+      <g class="p-qc">
+        <path class="route qc" d="M454 124 C492 124 486 52 516 52 C546 52 552 120 604 120"/>
+        ${cloudIcon(516, 44)}
+        <text class="lbl s" x="516" y="18">QuickConnect · Synology 중계</text>
+      </g>
+      ${laptopIcon(640, 100)}${phoneIcon(740, 100)}
+    </svg>`;
+    const tall = `<svg class="net-v" viewBox="0 0 360 660" role="img" aria-label="${label}">
+      <rect class="zone" x="12" y="12" width="336" height="190" rx="14"/>
+      <rect class="zone" x="12" y="470" width="336" height="178" rx="14"/>
+      <text class="zlbl" x="30" y="40">사무실 안</text>
+      <text class="zlbl" x="30" y="498">사무실 밖</text>
+      ${pcIcon(100, 64)}${pcIcon(180, 64)}${pcIcon(260, 64)}
+      <g class="p-lan">
+        <path class="lan" d="M100 104 V150 M180 104 V150 M260 104 V150 M100 150 H260 M180 150 V262"/>
+        <path class="route" d="M180 262 V150"/>
+        <text class="lbl s" x="180" y="186">LAN · 네트워크 드라이브</text>
+      </g>
+      ${nasIcon(180, 262)}
+      <text class="lbl" x="262" y="304">NAS</text>
+      <g class="p-vpn">
+        <path class="tube" d="M160 334 V560"/>
+        <path class="route" d="M160 334 V560"/>
+        ${lockIcon(160, 420)}
+        <text class="lbl" x="90" y="420">VPN</text>
+        <text class="lbl s" x="90" y="440">Tailscale</text>
+      </g>
+      <g class="p-qc">
+        <path class="route qc" d="M224 290 C296 290 300 350 300 376 M300 412 C300 470 270 500 262 548"/>
+        ${cloudIcon(300, 396)}
+        <text class="lbl s" x="300" y="452">QuickConnect</text>
+      </g>
+      ${laptopIcon(140, 560)}${phoneIcon(262, 552)}
+    </svg>`;
+    return wide + tall;
+  }
+  document.getElementById("net").innerHTML = accessSVG();
+
+  const ACCESS_OPTIONS = [
+    {
+      key: "lan", name: "내부 접속", sub: "사무실 안 · 가장 빠름",
+      title: "내부 접속 (네트워크 드라이브)", chip: ["muted", "사무실 안"],
+      desc: "윈도우 파일 탐색기에서 NAS를 Z: 드라이브처럼 연결해, 일반 폴더처럼 열고 저장합니다.",
+      facts: [
+        ["속도", "사무실 네트워크 속도 그대로라 가장 빠릅니다."],
+        ["설정", "PC마다 한 번 연결해 두면 끝입니다."],
+        ["보안", "자료가 사무실 밖으로 나가지 않습니다."],
+        ["쓰는 곳", "사무실 안의 PC"],
+        ["비용", "무료"]
+      ]
+    },
+    {
+      key: "qc", name: "QuickConnect", sub: "설정이 가장 쉬움",
+      title: "QuickConnect", chip: ["muted", "보조 수단"],
+      desc: "Synology 무료 서비스입니다. 공유기 설정 없이 QuickConnect 주소 하나로 밖에서 NAS에 접속합니다.",
+      facts: [
+        ["속도", "Synology 중계 서버를 거칠 때는 느려질 수 있습니다."],
+        ["설정", "주소만 만들면 끝이라 가장 쉽습니다."],
+        ["보안", "주소가 알려지면 누구나 로그인 화면까지 올 수 있어, 2단계 인증이 꼭 필요합니다."],
+        ["쓰는 곳", "VPN을 쓰기 어려운 기기, 급할 때"],
+        ["비용", "무료 (Synology 기본 제공)"]
+      ]
+    },
+    {
+      key: "vpn", name: "VPN", sub: "Tailscale · 널리 쓰임",
+      title: "VPN (Tailscale)", chip: ["muted", "널리 쓰이는 VPN"],
+      desc: "NAS 사용자들이 원격 접속에 널리 쓰는 VPN입니다. 노트북과 휴대폰에 앱을 깔고 로그인하면, 집이나 출장지에서도 사무실 안에 있는 것처럼 NAS에 접속합니다. Synology 패키지 센터에서 바로 설치할 수 있습니다.",
+      facts: [
+        ["속도", "대부분 기기끼리 바로 연결돼 빠릅니다. 사무실 인터넷의 업로드 속도가 한계입니다."],
+        ["설정", "NAS와 각 기기에 앱을 깔고 같은 계정으로 로그인합니다."],
+        ["보안", "NAS를 인터넷에 직접 열어 두지 않아 가장 안전합니다."],
+        ["쓰는 곳", "집, 출장지, 법원 등 사무실 밖 어디서나"],
+        ["비용", "1인당 월 8달러"]
+      ],
+      note: "업무용으로 쓰려면 유료 요금제(Standard, 1인당 월 8달러)가 필요합니다. 가입 후 14일 동안은 무료로 써 볼 수 있습니다.",
+      alt: "<b>비용 없이 쓰려면</b> Synology 자체 VPN 서버(DSM 무료 패키지)를 쓸 수 있습니다. 대신 공유기에서 포트를 하나 열어야 하고, 처음 설정이 Tailscale보다 어렵습니다."
+    }
+  ];
+  let accessKey = "lan";
+  function renderAccess(animateIn) {
+    document.getElementById("access-tabs").innerHTML = ACCESS_OPTIONS.map((o) => {
+      const on = o.key === accessKey;
+      return `<button type="button" data-key="${o.key}" aria-pressed="${on}"${on ? ' class="on"' : ""}>` +
+        `<span class="cap">${o.name}</span><span class="mdl">${o.sub}</span></button>`;
+    }).join("");
+    const o = ACCESS_OPTIONS.find((x) => x.key === accessKey);
+    document.getElementById("net").dataset.focus = o.key;
+    const detail = document.getElementById("access-detail");
+    detail.innerHTML =
+      `<h3>${o.title} <span class="chip ${o.chip[0]}">${o.chip[1]}</span></h3>` +
+      `<p>${o.desc}</p>` +
+      `<div class="facts">${o.facts.map(([k, v]) => `<div class="fact"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("")}</div>` +
+      (o.note ? `<p class="note">${o.note}</p>` : "") +
+      (o.alt ? `<p class="alt-note">${o.alt}</p>` : "");
+    if (animateIn) {
+      detail.classList.remove("enter");
+      void detail.offsetWidth; // restart the entry animation
+      detail.classList.add("enter");
+    }
+  }
+  renderAccess(false);
+  document.getElementById("access-tabs").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-key]");
+    if (!btn) return;
+    accessKey = btn.dataset.key;
+    renderAccess(true);
+  });
+
+  /* ================= Recommendation ================= */
+  function recoStatsHTML(ev) {
+    const dsm = Math.floor(ev.usable * TB_TO_DSM * 10) / 10;
+    return `<div class="stats">` +
+      `<div class="stat"><span class="v">${won(ev.total)}</span><span class="k">본체 + HDD 합계 (UPS 별도)</span></div>` +
+      `<div class="stat"><span class="v">${ev.usable}TB</span><span class="k">쓸 수 있는 용량 (DSM 표시 약 ${dsm}TB)</span></div>` +
+      `<div class="stat"><span class="v">${ev.parity}개</span><span class="k">${ev.parity > 1 ? "동시에 고장 나도" : "고장 나도"} 버티는 디스크 수</span></div>` +
+      `</div>`;
+  }
+  function renderRecoPicker() {
+    document.getElementById("reco-tabs").innerHTML = RECO_TBS.map((tb) => {
+      const ev = evaluate(RECO_OPTIONS[tb].main);
+      const on = tb === recoTb;
+      return `<button type="button" data-tb="${tb}" aria-pressed="${on}"${on ? ' class="on"' : ""}>` +
+        `<span class="cap">${tb}TB</span>` +
+        `<span class="mdl">${MODELS[ev.cfg.model].name}</span><span class="mdl">${ev.cfg.tb}TB × ${ev.cfg.count} · ${RAID_LABEL[ev.cfg.raid]}</span>` +
+        `<span class="prc">${won(ev.total)}</span></button>`;
+    }).join("");
+  }
+  function renderReco(animateIn) {
+    const opt = RECO_OPTIONS[recoTb];
+    const showAlt = recoAlt && !!opt.alt;
+    const main = evaluate(opt.main);
+    const alt = opt.alt ? evaluate(opt.alt) : null;
+    const ev = showAlt ? alt : main;
+    const bays = MODELS[ev.cfg.model].bays;
+    const reasons = showAlt ? altReasons(alt, main) : opt.reasons(main, alt);
+    let action = "";
+    if (showAlt) {
+      action = `<div class="btns"><button type="button" class="ghost-btn" data-act="back">← 추천 구성으로 돌아가기</button></div>`;
+    } else if (alt) {
+      action = `<button type="button" class="alt" data-act="alt"><span><b>더 저렴하게 가려면</b> ${baseTitle(alt.cfg)} · <span class="num">${won(alt.total)}</span></span><span class="arrow" aria-hidden="true">→</span></button>`;
+    }
+    const view = document.getElementById("reco-view");
+    view.innerHTML =
+      `<div class="device" id="reco-dev">${deviceSVG(bays, bays === 2 ? 106 : 199, baseTitle(ev.cfg))}</div>` +
+      `<div class="reco-body"><p class="reco-title">${baseTitle(ev.cfg)}</p>${recoStatsHTML(ev)}` +
+      `<ol class="reasons">${reasons.map((r) => `<li>${r}</li>`).join("")}</ol>${action}</div>`;
+    fillBays(document.getElementById("reco-dev"), ev.cfg, false);
+    document.getElementById("reco-h2").textContent = showAlt ? "더 저렴한 대안" : "추천 구성";
+    renderRecoPicker();
+    if (animateIn) {
+      view.classList.remove("enter");
+      void view.offsetWidth; // restart the entry animation
+      view.classList.add("enter");
+    }
+  }
+
+  function setHonest(i) {
+    document.getElementById("hn-board").dataset.step = i;
+    setActive("#hn-caps > .cap", i);
+  }
+  function renderHonestPrices() {
+    const lite = evaluate({ model: "ds725", tb: 4, count: 2, raid: "shr" });
+    const full = evaluate({ model: "ds925", tb: 8, count: 4, raid: "shr2", ups: true });
+    document.getElementById("hn-lite-price").innerHTML = `예: 4TB × 2 기준 <b>${won(lite.total)}</b> + 외장 HDD`;
+    document.getElementById("hn-full-price").innerHTML = `예: 8TB × 4, UPS 포함 <b>${won(full.total)}</b> + 외장 HDD`;
+  }
+
+  function renderUpsTotals() {
+    document.getElementById("ups-totals").innerHTML = RECO_TBS.map((tb) => {
+      const ev = evaluate(RECO_OPTIONS[tb].main);
+      return `<tr><td>${tb}TB · ${baseTitle(ev.cfg)}</td>` +
+        `<td class="n" data-label="본체 + HDD">${won(ev.total)}</td>` +
+        `<td class="n" data-label="UPS 포함 합계"><b>${won(ev.total + prices.ups)}</b></td></tr>`;
+    }).join("");
+  }
+
+  function renderPriceText() {
+    document.querySelectorAll("[data-price]").forEach((el) => {
+      const key = el.dataset.price;
+      const isAddon = el.closest(".opt-card") || el.closest(".check");
+      el.textContent = isAddon ? plusWon(prices[key]) : won(prices[key]);
+    });
+    document.querySelectorAll("[data-diff]").forEach((el) => {
+      el.textContent = won(Math.abs(prices.ds925 - prices.ds725));
+    });
+    const e8a = evaluate(S3_STEPS[1].a).total;
+    const e8b = evaluate(S3_STEPS[1].b).total;
+    document.getElementById("s3-diff8").textContent = won(Math.abs(e8b - e8a));
+    renderReco(false);
+    renderGlance();
+    renderUpsTotals();
+    renderHonestPrices();
+    if (s3Current >= 0) setS3(s3Current, false);
+    renderS2();
+  }
+
+  /* ================= At a glance (intro) ================= */
+  function renderGlance() {
+    document.getElementById("glance-cards").innerHTML = RECO_TBS.map((tb) => {
+      const ev = evaluate(RECO_OPTIONS[tb].main);
+      const c = ev.cfg;
+      return `<div class="glance-card">` +
+        `<span class="cap">${ev.usable}TB<small>쓸 수 있는 용량</small></span>` +
+        `<span class="model">${MODELS[c.model].name}</span>` +
+        `<span class="spec">${c.tb}TB 디스크 ${c.count}개 · ${RAID_LABEL[c.raid]}</span>` +
+        `<span class="spec">디스크 ${ev.parity}개 고장까지 대비</span>` +
+        `<span class="total">${won(ev.total)}</span>` +
+        `</div>`;
+    }).join("");
+    // Larger capacities: the same builds the capacity scene shows for 20-40TB
+    const large = [
+      { cfg: S3_STEPS[3].a, note: "DS725+ 최대 · 1개 고장까지만 대비" },
+      { cfg: S3_STEPS[4].b, note: "여기부터 DS925+만 가능" },
+      { cfg: S3_STEPS[5].b, note: "" },
+      { cfg: S3_STEPS[6].b, note: "확장 유닛 없이 만들 수 있는 최대" }
+    ];
+    document.getElementById("glance-large").innerHTML = large.map(({ cfg, note }) => {
+      const ev = evaluate(cfg);
+      return `<div class="gl-item">` +
+        `<span class="t"><b>${ev.usable}TB</b><span>${won(ev.total)}</span></span>` +
+        `<span>${MODELS[ev.cfg.model].name} · ${ev.cfg.tb}TB×${ev.cfg.count} · ${RAID_LABEL[ev.cfg.raid]}</span>` +
+        (note ? `<span>${note}</span>` : "") +
+        `</div>`;
+    }).join("");
+  }
+
+  /* ================= Combos table ================= */
+  function renderCombos() {
+    const body = document.getElementById("combo-body");
+    body.innerHTML = "";
+    COMBOS.forEach((combo) => {
+      const ev = evaluate(combo);
+      const tr = document.createElement("tr");
+      if (combo.recommended) tr.className = "reco-row";
+      const tag = combo.recommended ? ' <span class="chip">추천</span>' : combo.note ? ` <span class="chip muted">${combo.note}</span>` : "";
+      tr.innerHTML =
+        `<td>${baseTitle(ev.cfg)}${tag}</td>` +
+        `<td class="n" data-label="쓸 수 있는 용량">${ev.usable}TB</td>` +
+        `<td class="n" data-label="고장 대비">디스크 ${ev.parity}개</td>` +
+        `<td class="n" data-label="합계">${won(ev.total)}</td>` +
+        `<td><button type="button" class="link-btn">계산기로</button></td>`;
+      tr.querySelector("button").addEventListener("click", () => {
+        setState({ ...state, model: combo.model, tb: combo.tb, count: combo.count, raid: combo.raid });
+        scrollToSection("calc");
+      });
+      body.appendChild(tr);
+    });
+  }
+
+  /* ================= Calculator ================= */
+  const $ = (id) => document.getElementById(id);
+  let state = { ...RECOMMENDED };
+
+  function buildSelects() {
+    $("c-tb").innerHTML = Object.keys(HDD_MODELS).map((tb) =>
+      `<option value="${tb}">${tb}TB · ${HDD_MODELS[tb]} · ${won(prices["hdd" + tb])}</option>`).join("");
+    $("c-mem").innerHTML = `<option value="none">추가 안 함 (기본 4GB)</option>` +
+      ["mem4", "mem8", "mem16"].map((k) =>
+        `<option value="${k}"${ITEM[k].soldOut ? " disabled" : ""}>${ITEM[k].label} · ${plusWon(prices[k])}</option>`).join("");
+    $("c-ssd").innerHTML = `<option value="none">추가 안 함</option>` +
+      ["ssd3410", "ssd5420s", "ssd5420l"].map((k) => `<option value="${k}">${ITEM[k].label} · ${plusWon(prices[k])}</option>`).join("");
+    $("c-install").innerHTML = `<option value="none">안 함 (원격 초기설정 포함)</option>` +
+      ["instSeoul", "instMetro", "instLocal"].map((k) => `<option value="${k}">${ITEM[k].label.replace("방문 설치 · ", "")} · ${plusWon(prices[k])}</option>`).join("");
+  }
+
+  function setState(next) {
+    state = normalize(next);
+    syncForm();
+    renderSummary();
+  }
+
+  function syncForm() {
+    const bays = MODELS[state.model].bays;
+    $("m-" + state.model).checked = true;
+    $("c-tb").value = String(state.tb);
+    [1, 2, 3, 4].forEach((n) => {
+      const el = $("n-" + n);
+      el.disabled = n > bays;
+      el.checked = n === state.count;
+    });
+    $("r-basic").disabled = state.count > 1;
+    $("r-shr").disabled = state.count < 2;
+    $("r-shr2").disabled = state.count < 4;
+    $("r-" + state.raid).checked = true;
+    $("c-mem").value = state.mem;
+    $("c-ssd").value = state.ssd;
+    $("c-ssd-qty").value = String(state.ssdQty);
+    $("c-ssd-qty").disabled = state.ssd === "none";
+    $("c-install").value = state.install;
+    $("c-care").checked = state.care;
+    $("c-ew").checked = state.ew;
+    $("c-ups").checked = !!state.ups;
+  }
+
+  function readForm() {
+    const checked = (name) => document.querySelector(`input[name="${name}"]:checked`);
+    return {
+      model: checked("model").value,
+      tb: Number($("c-tb").value),
+      count: Number(checked("count") ? checked("count").value : 2),
+      raid: checked("raid") ? checked("raid").value : "shr",
+      mem: $("c-mem").value,
+      ssd: $("c-ssd").value,
+      ssdQty: Number($("c-ssd-qty").value),
+      install: $("c-install").value,
+      care: $("c-care").checked,
+      ew: $("c-ew").checked,
+      ups: $("c-ups").checked
+    };
+  }
+
+  function renderSummary() {
+    const ev = evaluate(state);
+    $("sum-title").textContent = fullTitle(ev);
+    $("sum-total").textContent = won(ev.total);
+    $("sum-usable").textContent = ev.usable + "TB";
+    $("sum-tol").textContent = ev.parity + "개";
+    $("sum-mem").textContent = ev.memGb + "GB";
+    $("sum-free").textContent = (MODELS[ev.cfg.model].bays - ev.cfg.count) + "칸";
+
+    const warns = [];
+    if (ev.parity === 0) warns.push("디스크가 1개 고장 나면 데이터를 잃습니다. 디스크를 2개 이상 넣고 SHR을 고르세요.");
+    if (ev.cfg.model === "ds925" && ev.cfg.count === 4 && ev.cfg.raid === "shr") warns.push("디스크 4개라면 SHR-2로 2개 동시 고장까지 대비할 수 있습니다. 대신 쓸 수 있는 용량이 디스크 1개분 줄어듭니다.");
+    if (ev.cfg.ssd !== "none" && ev.cfg.ssdQty === 1) warns.push("SSD 1개로는 읽기 캐시만 됩니다. 읽기·쓰기 캐시는 2개가 필요합니다.");
+    if (!ev.cfg.ups) warns.push("UPS가 빠져 있습니다. 정전과 순간 과전압에 대비하려면 UPS를 함께 두는 것을 권합니다.");
+    $("sum-warns").innerHTML = warns.map((w) => `<p>${w}</p>`).join("");
+
+    $("sum-lines").innerHTML = ev.lines.map((l) => `<li><span>${l.label}</span><span>${won(l.amount)}</span></li>`).join("");
+    $("btn-add").disabled = compareList.length >= COMPARE_MAX;
+  }
+
+  /* ================= Compare list ================= */
+  let compareList = readJSON(COMPARE_KEY, []).filter((c) => c && MODELS[c.model]).slice(0, COMPARE_MAX);
+  function renderCompare() {
+    const box = $("cmp-list");
+    if (!compareList.length) {
+      box.innerHTML = `<p class="empty">아직 담은 구성이 없습니다. 계산기에서 구성을 고르고 "비교 목록에 담기"를 누르세요.</p>`;
+      $("btn-add").disabled = false;
+      return;
+    }
+    box.innerHTML = "";
+    compareList.forEach((cfg, idx) => {
+      const ev = evaluate(cfg);
+      const card = document.createElement("div");
+      card.className = "cmp-card";
+      card.innerHTML =
+        `<span class="t">${fullTitle(ev)}</span>` +
+        `<span class="p">${won(ev.total)}</span>` +
+        `<span class="m">쓸 수 있는 용량 ${ev.usable}TB · 고장 대비 ${ev.parity}개</span>` +
+        `<div class="btns"><button type="button" class="link-btn" data-act="load">불러오기</button><button type="button" class="link-btn" data-act="del">빼기</button></div>`;
+      card.querySelector('[data-act="load"]').addEventListener("click", () => setState({ ...cfg }));
+      card.querySelector('[data-act="del"]').addEventListener("click", () => {
+        compareList = compareList.filter((_, k) => k !== idx);
+        writeJSON(COMPARE_KEY, compareList);
+        renderCompare();
+        renderSummary();
+      });
+      box.appendChild(card);
+    });
+    $("btn-add").disabled = compareList.length >= COMPARE_MAX;
+  }
+
+  /* ================= Price editor ================= */
+  function buildPriceEditor() {
+    const grid = $("price-grid");
+    let lastGroup = "";
+    const parts = [];
+    PRICE_ITEMS.forEach((it) => {
+      if (it.group !== lastGroup) {
+        parts.push(`<span class="grp">${it.group}</span>`);
+        lastGroup = it.group;
+      }
+      parts.push(`<label for="price-${it.key}">${it.label}<input type="number" id="price-${it.key}" data-key="${it.key}" min="0" step="1000" inputmode="numeric" value="${prices[it.key]}"></label>`);
+    });
+    grid.innerHTML = parts.join("");
+    grid.addEventListener("change", (e) => {
+      const key = e.target.dataset.key;
+      if (!key) return;
+      const v = Number(e.target.value);
+      if (!Number.isFinite(v) || v < 0) {
+        e.target.value = prices[key];
+        return;
+      }
+      prices = { ...prices, [key]: Math.round(v) };
+      writeJSON(PRICE_KEY, prices);
+      refreshAll();
+    });
+    $("btn-reset-prices").addEventListener("click", () => {
+      prices = { ...DEFAULT_PRICES };
+      writeJSON(PRICE_KEY, {});
+      PRICE_ITEMS.forEach((it) => { $("price-" + it.key).value = prices[it.key]; });
+      refreshAll();
+    });
+  }
+
+  function refreshAll() {
+    renderPriceText();
+    buildSelects();
+    syncForm();
+    renderSummary();
+    renderCombos();
+    renderCompare();
+  }
+
+  /* ================= Wire up ================= */
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const animated = !reduceMotion && !!window.gsap && !!window.ScrollTrigger;
+
+  // Jump to a section by stepping the scroll ourselves: the browser's smooth scrollIntoView
+  // can stall inside the embedded page frame, and a long native glide crawls through every scene
+  const JUMP_SECONDS = 1.2;
+  function scrollToSection(id) {
+    const y = document.getElementById(id).getBoundingClientRect().top + window.scrollY;
+    if (!animated) {
+      window.scrollTo(0, y);
+      return;
+    }
+    const pos = { y: window.scrollY };
+    gsap.to(pos, { y, duration: JUMP_SECONDS, ease: "power2.inOut", overwrite: true, onUpdate: () => window.scrollTo(0, pos.y) });
+  }
+
+  buildSelects();
+  buildPriceEditor();
+  renderPriceText();
+  renderCombos();
+  setState(state);
+  renderCompare();
+
+  $("calc-form").addEventListener("change", () => setState(readForm()));
+  $("calc-form").addEventListener("submit", (e) => e.preventDefault());
+  $("btn-reco").addEventListener("click", () => setState({ ...RECOMMENDED }));
+  $("glance-more").addEventListener("click", () => scrollToSection("calc"));
+  $("btn-add").addEventListener("click", () => {
+    if (compareList.length >= COMPARE_MAX) return;
+    compareList = [...compareList, { ...state }];
+    writeJSON(COMPARE_KEY, compareList);
+    renderCompare();
+  });
+
+  fillBays(document.getElementById("outage-nas"), { tb: 8, count: 4 }, false);
+  renderOutage(0);
+
+  // Disk activity LEDs: each one flickers on its own, mostly on with short random off-blips like a busy drive
+  const LED_TICK_MS = 50;
+  const LED_OFF_CHANCE = 0.15; // per tick while lit  -> lit for ~0.3s on average
+  const LED_ON_CHANCE = 0.55;  // per tick while dark -> dark for ~0.1s on average
+  if (!reduceMotion) {
+    setInterval(() => {
+      if (document.hidden) return;
+      document.querySelectorAll(".led-disk").forEach((led) => {
+        const isOff = led.classList.contains("off");
+        if (Math.random() < (isOff ? LED_ON_CHANCE : LED_OFF_CHANCE)) led.classList.toggle("off");
+      });
+    }, LED_TICK_MS);
+  }
+
+  // Only one recommendation is on the page at a time; tabs and the alternative button swap it
+  $("reco-tabs").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-tb]");
+    if (!btn) return;
+    recoTb = Number(btn.dataset.tb);
+    recoAlt = false;
+    renderReco(true);
+  });
+  $("reco-view").addEventListener("click", (e) => {
+    const act = e.target.closest("[data-act]");
+    if (!act) return;
+    recoAlt = act.dataset.act === "alt";
+    renderReco(true);
+  });
+
+  // Hold: each regular section stays on screen for a short stretch of scrolling before the next one comes in.
+  // Shorter than the screen -> held in the middle; taller -> held with its last part on screen.
+  const HOLD_SECTIONS = ["#s3", "#reco", "#ups", "#access", "#backup", "#care", "#combos"];
+  const HOLD_VH = 100;
+  const HOLD_EDGE = 24; // px kept clear below a tall section while it is held
+  const holdInners = HOLD_SECTIONS.map((sel) => {
+    const section = document.querySelector(sel);
+    const inner = section.querySelector(".section-inner, .stage");
+    const spacer = document.createElement("div");
+    spacer.className = "hold-space";
+    spacer.style.height = HOLD_VH + "vh";
+    spacer.setAttribute("aria-hidden", "true");
+    section.appendChild(spacer);
+    inner.classList.add("hold");
+    return inner;
+  });
+  function updateHolds() {
+    holdInners.forEach((inner) => {
+      const free = window.innerHeight - inner.offsetHeight;
+      inner.style.top = (free >= 0 ? free / 2 : free - HOLD_EDGE) + "px";
+    });
+  }
+  updateHolds();
+  window.addEventListener("resize", updateHolds);
+  if (window.ResizeObserver) {
+    const holdObserver = new ResizeObserver(updateHolds); // tab switches change section heights
+    holdInners.forEach((inner) => holdObserver.observe(inner));
+  }
+
+  // Step buttons: jump to that step (scroll position when animated, direct switch otherwise)
+  const stepTriggers = {};
+  const equalWeights = (count) => Array(count).fill(1);
+  // Step index for a scroll progress, where each step owns a share of the scene proportional to its weight
+  function stepAt(weights, progress) {
+    const total = weights.reduce((a, b) => a + b, 0);
+    let acc = 0;
+    for (let k = 0; k < weights.length; k++) {
+      acc += weights[k] / total;
+      if (progress < acc) return k;
+    }
+    return weights.length - 1;
+  }
+  // Scene progress at a fraction (0..1) of step i
+  function stepPoint(weights, i, frac) {
+    const total = weights.reduce((a, b) => a + b, 0);
+    const before = weights.slice(0, i).reduce((a, b) => a + b, 0);
+    return (before + weights[i] * frac) / total;
+  }
+  // Position (0..1) inside the current step, for scroll-driven animation within a step
+  function localProgress(weights, step, progress) {
+    const start = stepPoint(weights, step, 0);
+    const end = stepPoint(weights, step, 1);
+    return Math.max(0, Math.min(1, (progress - start) / (end - start)));
+  }
+  function wireStepButtons(sceneId, weights, direct, frac) {
+    document.querySelectorAll(`#${sceneId}-dots > button`).forEach((btn, i) => {
+      btn.addEventListener("click", () => {
+        const st = stepTriggers[sceneId];
+        if (!st) {
+          direct(i);
+          return;
+        }
+        window.scrollTo({ top: st.start + (st.end - st.start) * stepPoint(weights, i, frac), behavior: "smooth" });
+      });
+    });
+  }
+  wireStepButtons("s3", equalWeights(S3_STEPS.length), (i) => setS3(i, true), 0.5);
+  setS3(0, false);
+  // SHR explainer sheet: steps play one after another; a step button jumps there, the round button pauses
+  const REBUILD_PLAY_MS = 6000;
+  const S4_STEP_MS = [4000, 7500, 7500, 4500];
+  const PAUSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>';
+  const PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 L19 12 L8 18.5 Z"/></svg>';
+  const s4Play = { step: 0, start: 0, elapsed: 0, playing: false, finished: false, frame: 0 };
+  const s4Buttons = document.querySelectorAll("#s4-dots > button");
+
+  function s4Paint(elapsed) {
+    const i = s4Play.step;
+    if (S4_STEPS[i].a.rebuild || S4_STEPS[i].b.rebuild) progressS4(i, Math.min(1, elapsed / REBUILD_PLAY_MS));
+    s4Buttons.forEach((btn, k) => {
+      btn.classList.toggle("done", k < i);
+      btn.querySelector(".bar i").style.width = k === i ? Math.min(100, elapsed / S4_STEP_MS[i] * 100) + "%" : "";
+    });
+  }
+  function s4SetPlaying(on) {
+    s4Play.playing = on;
+    const btn = $("s4-play");
+    btn.innerHTML = on ? PAUSE_ICON : PLAY_ICON;
+    btn.setAttribute("aria-label", on ? "일시정지" : s4Play.finished ? "처음부터 다시" : "재생");
+  }
+  function s4Tick(now) {
+    const elapsed = now - s4Play.start;
+    s4Paint(elapsed);
+    if (elapsed < S4_STEP_MS[s4Play.step]) {
+      s4Play.frame = requestAnimationFrame(s4Tick);
+    } else if (s4Play.step < S4_STEPS.length - 1) {
+      s4Goto(s4Play.step + 1);
+    } else {
+      s4Play.finished = true;
+      s4SetPlaying(false);
+    }
+  }
+  function s4Goto(i) {
+    cancelAnimationFrame(s4Play.frame);
+    s4Play.step = i;
+    s4Play.elapsed = 0;
+    s4Play.finished = false;
+    setS4(i);
+    if (reduceMotion) {
+      s4Paint(S4_STEP_MS[i]); // show each step in its final state, no auto-play
+      return;
+    }
+    s4Play.start = performance.now();
+    s4Paint(0);
+    if (s4Play.playing) s4Play.frame = requestAnimationFrame(s4Tick);
+  }
+  function s4Toggle() {
+    if (s4Play.playing) {
+      cancelAnimationFrame(s4Play.frame);
+      s4Play.elapsed = performance.now() - s4Play.start;
+      s4SetPlaying(false);
+      return;
+    }
+    s4SetPlaying(true);
+    if (s4Play.finished) {
+      s4Goto(0);
+      return;
+    }
+    s4Play.start = performance.now() - s4Play.elapsed;
+    s4Play.frame = requestAnimationFrame(s4Tick);
+  }
+
+  const shrSheet = $("shr-sheet");
+  let shrOpener = null;
+  function openShr(opener) {
+    shrOpener = opener;
+    shrSheet.hidden = false;
+    document.documentElement.style.overflow = "hidden";
+    $("s4-play").hidden = reduceMotion;
+    s4SetPlaying(!reduceMotion);
+    s4Goto(0);
+    shrSheet.querySelector(".sheet-close").focus({ preventScroll: true });
+  }
+  function closeShr() {
+    cancelAnimationFrame(s4Play.frame);
+    s4SetPlaying(false);
+    shrSheet.hidden = true;
+    document.documentElement.style.overflow = "";
+    if (shrOpener) shrOpener.focus({ preventScroll: true });
+  }
+  $("btn-why").addEventListener("click", (e) => openShr(e.currentTarget));
+  shrSheet.addEventListener("click", (e) => {
+    if (e.target.closest("[data-close]")) closeShr();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !shrSheet.hidden) closeShr();
+  });
+  $("s4-play").addEventListener("click", s4Toggle);
+  s4Buttons.forEach((btn, i) => btn.addEventListener("click", () => {
+    if (!reduceMotion) s4SetPlaying(true);
+    s4Goto(i);
+  }));
+
+  /* Prev / next buttons: jump between checkpoints where the picture meaningfully changes */
+  const NAV_SETTLE_MS = 900;
+  function checkpointYs() {
+    const docTop = (sel) => document.querySelector(sel).getBoundingClientRect().top + window.scrollY;
+    const maxY = document.documentElement.scrollHeight - window.innerHeight;
+    const ys = [0];
+    if (stepTriggers.intro) {
+      const at = (st, frac) => st.start + (st.end - st.start) * frac;
+      ys.push(at(stepTriggers.intro, 0.3));
+      ys.push(at(stepTriggers.intro, 0.9));
+      S2_ITEMS.forEach((_, i) => ys.push(at(stepTriggers.s2, stepPoint(equalWeights(S2_ITEMS.length), i, 0.5))));
+      ys.push(docTop("#s3"));
+      [0.25, 0.75].forEach((f) => ys.push(at(stepTriggers.s5, f)));
+      [0.12, 0.97].forEach((f) => ys.push(at(stepTriggers.extras, f)));
+      [0.12, 0.37, 0.62, 0.87].forEach((f) => ys.push(at(stepTriggers.honest, f)));
+      OUTAGE_CHECKPOINTS.forEach((f) => ys.push(at(stepTriggers.outage, f)));
+    } else {
+      ["#s2", "#s3", "#s5", "#extras", "#outage", "#honest"].forEach((sel) => ys.push(docTop(sel)));
+    }
+    ["#reco", "#ups", "#access", "#backup", "#care", "#combos", "#calc"].forEach((sel) => ys.push(docTop(sel)));
+    ys.push(maxY);
+    return [...new Set(ys.map((y) => Math.round(Math.min(Math.max(y, 0), maxY))))].sort((a, b) => a - b);
+  }
+
+  let navTarget = null;
+  let navTime = 0;
+  function navGo(dir) {
+    const recent = navTarget !== null && Date.now() - navTime < NAV_SETTLE_MS;
+    const from = recent ? navTarget : window.scrollY;
+    const ys = checkpointYs();
+    const target = dir > 0 ? ys.find((y) => y > from + 8) : [...ys].reverse().find((y) => y < from - 8);
+    if (target === undefined) return;
+    navTarget = target;
+    navTime = Date.now();
+    window.scrollTo({ top: target, behavior: reduceMotion ? "auto" : "smooth" });
+  }
+  function updateNav() {
+    const maxY = document.documentElement.scrollHeight - window.innerHeight;
+    $("nav-prev").disabled = window.scrollY <= 8;
+    $("nav-next").disabled = window.scrollY >= maxY - 8;
+  }
+  $("nav-prev").addEventListener("click", () => navGo(-1));
+  $("nav-next").addEventListener("click", () => navGo(1));
+  let navFrame = 0;
+  window.addEventListener("scroll", () => {
+    if (navFrame) return;
+    navFrame = requestAnimationFrame(() => { navFrame = 0; updateNav(); });
+  }, { passive: true });
+  window.addEventListener("resize", updateNav);
+  updateNav();
+
+  if (!animated) {
+    // Static layout: show the most telling state of each scene, all captions visible
+    document.querySelector("#board .board").dataset.focus = "all";
+    renderOutage(UPS_START + 0.05);
+    document.getElementById("hn-board").classList.add("in");
+    return;
+  }
+
+  document.documentElement.classList.add("anim");
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* Scene 1 */
+  const pair = document.querySelector("#intro .pair");
+  const introDevices = gsap.utils.toArray("#intro .device");
+  const offsetToCentre = (i, el) => {
+    const unit = el.closest(".unit");
+    return pair.offsetWidth / 2 - (unit.offsetLeft + unit.offsetWidth / 2);
+  };
+  const introTl = gsap.timeline({
+    defaults: { ease: "none" },
+    scrollTrigger: { trigger: "#intro", start: "top top", end: "bottom bottom", scrub: 0.6, invalidateOnRefresh: true }
+  })
+    .to("#intro .hint", { opacity: 0, duration: 0.6 }, 0)
+    .to("#intro .hero-eyebrow", { opacity: 0, y: -16, duration: 1 }, 0)
+    .to("#intro .hero-sub", { opacity: 0, y: -16, duration: 1.2 }, 0.1)
+    .to("#intro .hero-word", { scale: 0.42, y: "-30vh", opacity: 0, duration: 3, ease: "power1.in" }, 0)
+    // autoAlpha hides the glance (and its button) from clicks while it is invisible
+    .fromTo("#intro .glance", { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1.2, ease: "power2.out" }, 2.2)
+    .to("#intro .glance", { autoAlpha: 0, y: -24, duration: 1, ease: "power1.in" }, 5.6)
+    .fromTo(introDevices,
+      { opacity: 0, y: "24vh", scale: 0.9, x: offsetToCentre },
+      { opacity: 1, y: 0, scale: 1, duration: 2.6, ease: "power2.out" }, 6.4)
+    .to(introDevices, { x: 0, duration: 2.6, ease: "power2.inOut" }, 9.6)
+    .fromTo("#intro .layer-pair .intro-head, #intro .layer-head .intro-head", { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 1.4 }, 11.4)
+    .fromTo("#intro .unit-label", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 1.4, stagger: 0.2 }, 11.6)
+    .to({}, { duration: 1.6 });
+
+  // Centre the glance on the pinned screen, shrinking it on short phones so all of it stays visible
+  const GLANCE_EDGE = 24; // px kept clear above and below
+  const glanceEl = document.querySelector("#intro .glance");
+  function fitGlance() {
+    const h = glanceEl.offsetHeight;
+    const fit = Math.min(1, (window.innerHeight - GLANCE_EDGE * 2) / h);
+    gsap.set(glanceEl, { scale: fit, transformOrigin: "50% 0%" });
+    glanceEl.style.marginTop = Math.round((window.innerHeight - h * fit) / 2) + "px";
+  }
+  fitGlance();
+  window.addEventListener("resize", fitGlance);
+  if (window.ResizeObserver) new ResizeObserver(fitGlance).observe(glanceEl); // web fonts can change its height
+
+  /* Step-driven scenes */
+  function stepScene(trigger, weights, onStep, onProgress) {
+    let current = -1;
+    const apply = (progress) => {
+      const step = stepAt(weights, progress);
+      if (step !== current) {
+        current = step;
+        onStep(step);
+      }
+      if (onProgress) onProgress(step, localProgress(weights, step, progress));
+    };
+    apply(0);
+    return ScrollTrigger.create({ trigger, start: "top top", end: "bottom bottom", onUpdate: (self) => apply(self.progress) });
+  }
+  stepTriggers.s2 = stepScene("#s2", equalWeights(S2_ITEMS.length), setS2);
+  stepTriggers.s5 = stepScene("#s5", equalWeights(2), setS5);
+  const extrasTl = gsap.timeline({
+    defaults: { ease: "none" },
+    scrollTrigger: { trigger: "#extras", start: "top top", end: "bottom bottom", scrub: 0.6 }
+  });
+  extrasTl
+    .fromTo("#extras .x-nas", { scale: 0.9 }, { scale: 1, duration: 1 }, 0)
+    .fromTo("#extras .x-ups", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 1 }, 1)
+    .fromTo("#extras .xl-l", { scaleX: 0 }, { scaleX: 1, duration: 0.8 }, 1.4)
+    .fromTo("#extras .x-hdd", { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 1 }, 2.2)
+    .fromTo("#extras .xl-r", { scaleX: 0 }, { scaleX: 1, duration: 0.8 }, 2.6)
+    .fromTo("#extras .xvline", { scaleY: 0 }, { scaleY: 1, duration: 0.8 }, 3.4)
+    .fromTo("#extras .x-vpn", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1 }, 3.8)
+    .fromTo("#extras .xh1", { opacity: 1, y: 0 }, { opacity: 0, y: -12, duration: 0.8 }, 5)
+    .fromTo("#extras .xh2", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.8 }, 5.3)
+    .to({}, { duration: 1.6 });
+  stepTriggers.extras = extrasTl.scrollTrigger;
+  stepTriggers.honest = stepScene("#honest", equalWeights(4), setHonest);
+  ScrollTrigger.create({
+    trigger: "#honest", start: "top 70%", once: true,
+    onEnter: () => document.getElementById("hn-board").classList.add("in")
+  });
+  stepTriggers.outage = stepScene("#outage", OUTAGE_WEIGHTS, setOutageStep,
+    (step, local) => renderOutage(stepPoint(OUTAGE_WEIGHTS, step, local)));
+  stepTriggers.intro = introTl.scrollTrigger;
+})();
+</script>
+
+</body></html>
